@@ -11,7 +11,7 @@
       S.settings = await window.api.getSettings();
       this.applyTheme(S.settings.theme);
       SC.i18n.setLang(S.settings.lang || 'de');
-      SC.ui.setTooltipDelay(S.settings.tooltipDelay != null ? S.settings.tooltipDelay : 2000);
+      SC.ui.setTooltipDelay(S.settings.tooltipDelay != null ? S.settings.tooltipDelay : 1000);
       SC.program.quality = S.settings.previewQuality || 'half';
       S.snap = S.settings.snap !== false;
       SC.ui.initTooltips();
@@ -80,7 +80,15 @@
         b.addEventListener('click', () => this.setMode(m));
         this.modeSw.append(b);
       }
-      r.append(this.modeSw);
+      const fb = (icon, key, tip, cmd) => {
+        const x = el('button', { class: 'btn', 'data-tip': tip, type: 'button' });
+        x.innerHTML = SC.icon(icon) + '<span data-i18n="' + key + '"></span>';
+        x.addEventListener('click', () => this.cmd(cmd));
+        return x;
+      };
+      const files = el('div', { class: 'file-btns' });
+      files.append(fb('newFile', 'btn.new', 'tool.new', 'new'), fb('open', 'btn.open', 'tool.open', 'open'), fb('save', 'btn.save', 'tool.save', 'save'));
+      r.append(files, this.modeSw);
       this.langBtn = el('button', { class: 'ibtn lang-btn', 'data-tip': 'tip.lang', type: 'button' });
       this.langBtn.innerHTML = SC.icon('globe') + '<span>' + (SC.i18n.lang || 'de').toUpperCase() + '</span>';
       this.langBtn.addEventListener('click', () => this.setLang(SC.i18n.lang === 'de' ? 'en' : 'de'));
@@ -154,9 +162,6 @@
         b('zoomOut', 'tool.zoomOut', 'zoom-out'), this.zoomSlider, b('zoomIn', 'tool.zoomIn', 'zoom-in'), b('zoomFit', 'tool.zoomFit', 'zoom-fit'), el('div', { class: 'sep' }),
         b('plus', 'tool.addTrack', 'add-track'), b('minus', 'tool.removeTrack', 'remove-track'),
         el('div', { class: 'spacer' }),
-        big('newFile', 'btn.new', 'tool.new', 'new'),
-        big('open', 'btn.open', 'tool.open', 'open'),
-        big('save', 'btn.save', 'tool.save', 'save'),
         big('export', 'btn.export', 'tool.export', 'export', true)
       );
       this.zoomSlider.value = this.zoomToSlider(S.zoom);

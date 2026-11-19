@@ -88,12 +88,14 @@ function setupProtocol() {
 
 /* ---------------- settings ---------------- */
 const DEFAULT_SETTINGS = {
-  lang: null, theme: 'dark', tooltipDelay: 2000, previewQuality: 'half', proxyLarge: true,
+  lang: null, theme: 'dark', tooltipDelay: 1000, previewQuality: 'half', proxyLarge: true,
   imageDuration: 5, transitionDuration: 1, autosave: true, snap: true, recent: []
 };
 function readSettings() {
   let s = {};
   try { s = JSON.parse(fs.readFileSync(settingsFile(), 'utf8')); } catch (e) { /* defaults */ }
+  // migration: tooltip default changed from 2 s to 1 s – carry over only if the user never changed it
+  if (!s.tipDelayV2) { if (s.tooltipDelay === 2000) delete s.tooltipDelay; s.tipDelayV2 = true; }
   const out = Object.assign({}, DEFAULT_SETTINGS, s);
   if (!out.lang) out.lang = (app.getLocale() || 'en').toLowerCase().startsWith('de') ? 'de' : 'en';
   return out;

@@ -31,7 +31,7 @@
   }
 
   function searchBox(onInput) {
-    const sb = el('label', { class: 'searchbox', 'data-tip': 'tip.fx.search', style: { margin: '8px 10px 0' } });
+    const sb = el('label', { class: 'searchbox', 'data-tip': 'tip.fx.search', style: { margin: '8px 10px 0', flex: 'none' } });
     sb.innerHTML = SC.icon('search');
     const inp = el('input', { type: 'text', 'data-i18n-ph': 'media.search', placeholder: t('media.search') });
     inp.addEventListener('input', () => onInput(inp.value.toLowerCase()));
@@ -52,14 +52,13 @@
       const isText = cat === 'text';
       const grid = el('div', { class: 'fx-grid' });
       for (const ty of types) {
-        const wide = ['detach', 'match', 'dynnorm', 'normalize', 'silence', 'denoise', 'eq10', 'stabilize'].includes(ty);
-        grid.append(fxItem('fx', ty, core.EFFECTS[ty].icon, 'fx.' + ty, 'fxd.' + ty, { wide }));
+        grid.append(fxItem('fx', ty, core.EFFECTS[ty].icon, 'fx.' + ty, 'fxd.' + ty));
       }
       if (isText) {
         const tpls = [['free', 'text'], ['lower', 'template'], ['bar', 'template'], ['box', 'template'], ['badge', 'template'], ['ticker', 'template'], ['credits', 'template']];
         for (const [tp, ic] of tpls) {
           if (!matches(fxSearch, t('tpl.' + tp), t('tpld.' + tp))) continue;
-          grid.append(fxItem('fx', 'text', ic, 'tpl.' + tp, 'tpld.' + tp, { template: tp, wide: tp === 'free' }));
+          grid.append(fxItem('fx', 'text', ic, 'tpl.' + tp, 'tpld.' + tp, { template: tp }));
         }
         for (const ut of (SC.store.S.settings.textTemplates || [])) {
           if (!matches(fxSearch, ut.name)) continue;

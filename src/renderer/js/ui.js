@@ -27,8 +27,8 @@
     return b;
   }
 
-  /* ---------------- tooltip (delay configurable, default 2 s) ---------------- */
-  const tip = { el: null, timer: null, target: null, delay: 2000 };
+  /* ---------------- tooltip (delay configurable, default 1 s) ---------------- */
+  const tip = { el: null, timer: null, target: null, delay: 1000 };
   function initTooltips() {
     tip.el = el('div', { class: 'tooltip', role: 'tooltip' });
     document.body.append(tip.el);

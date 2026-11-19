@@ -17,7 +17,7 @@
           <li><b>Schneiden &amp; verschönern:</b> Clips verschieben, kürzen, schneiden, Effekte und Übergänge darauf ziehen. Rechts in der <b>Schnitt-Vorschau</b> siehst du das Ergebnis.</li>
           <li><b>Exportieren:</b> Unten rechts auf <b>Export</b> klicken, Größe und Qualität wählen – fertig ist die MP4.</li>
         </ol>
-        <p>Über jedem Knopf erscheint nach kurzer Zeit (Standard: 2 Sekunden) ein Hinweis, was er macht. Die Zeit kannst du in den <b>Einstellungen</b> ändern.</p>`],
+        <p>Über jedem Knopf erscheint nach kurzer Zeit (Standard: 1 Sekunde) ein Hinweis, was er macht. Die Zeit kannst du in den <b>Einstellungen</b> ändern.</p>`],
       ['ui', 'Die Oberfläche', `
         <h3>Aufbau</h3>
         <table>
@@ -176,7 +176,7 @@
           <li><b>Cut &amp; polish:</b> Move, trim and split clips, drag effects and transitions onto them. The <b>edit preview</b> on the right shows the result.</li>
           <li><b>Export:</b> Click <b>Export</b> at the bottom right, choose size and quality – done, there's your MP4.</li>
         </ol>
-        <p>Hover over any button and a hint appears after a short time (default: 2 seconds). You can change the delay in the <b>settings</b>.</p>`],
+        <p>Hover over any button and a hint appears after a short time (default: 1 second). You can change the delay in the <b>settings</b>.</p>`],
       ['ui', 'The interface', `
         <h3>Layout</h3>
         <table>

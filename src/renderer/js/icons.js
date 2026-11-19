@@ -18,7 +18,7 @@
     mute: '<path d="M4 9v6h4l5 4V5L8 9z" fill="currentColor" stroke="none"/><path d="M16 9l5 6M21 9l-5 6"/>',
     fullscreen: '<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',
     select: '<path d="M5 3l14 8-6 1.5L10 19z" fill="currentColor" stroke-linejoin="round"/>',
-    blade: '<path d="M6 21L18 3"/><path d="M14 9l4 1-6 8"/><circle cx="6" cy="21" r="1.2" fill="currentColor"/>',
+    blade: '<path d="M2.8 20.2l7.4-7.4 1 1-7.4 7.4a.7.7 0 0 1-1-1z"/><path d="M11.4 11.6L21 3c-.4 4.6-3.2 9-7.8 10.4z" fill="currentColor" fill-opacity=".25"/>',
     split: '<path d="M12 3v18"/><rect x="2" y="7" width="7" height="10" rx="1.5"/><rect x="15" y="7" width="7" height="10" rx="1.5"/>',
     trash: '<path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M6 7l1 13h10l1-13"/><path d="M10 11v6M14 11v6"/>',
     ripple: '<path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M6 7l1 13h10l1-13"/><path d="M9.5 14h5M12.5 12l2 2-2 2"/>',

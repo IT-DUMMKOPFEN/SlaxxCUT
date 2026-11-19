@@ -102,6 +102,8 @@ textarea, input[type=text], input[type=number] { user-select: text; -webkit-user
 .dirty-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--warn); display: none; box-shadow: 0 0 8px var(--warn); }
 .dirty-dot.on { display: block; }
 .topbar-right { display: flex; gap: 4px; align-items: center; }
+.file-btns { display: flex; gap: 6px; margin-right: 10px; }
+.file-btns .btn { height: 32px; }
 .lang-btn { font-weight: 700; font-size: 12px; width: auto !important; padding: 0 9px; gap: 6px; }
 
 /* ---------------- buttons ---------------- */
@@ -146,6 +148,7 @@ textarea, input[type=text], input[type=number] { user-select: text; -webkit-user
 .tab.active { background: var(--panel3); color: var(--text); box-shadow: inset 0 -2px 0 var(--accent); }
 .tab-page { display: none; flex: 1; min-height: 0; flex-direction: column; }
 .tab-page.active { display: flex; }
+.tab-page > .searchbox { flex: none; }
 
 /* media page */
 .media-head { display: flex; gap: 6px; padding: 8px; align-items: center; flex: none; }

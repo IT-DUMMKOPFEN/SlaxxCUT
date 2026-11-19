@@ -34,7 +34,7 @@ xattr -cr /Applications/SlaxxCUT.app
 - **Text-Vorlagen:** Bauchbinde, Info-Leiste, Titel-Box, Ecken-Badge, Laufschrift, Abspann – Hintergrund als Farbe, Verlauf oder eigenes Bild, Ein-/Ausblend-Animationen, eigene Vorlagen speichern
 - **Audio-Modus (kleiner Sound-Editor):** große Wellenform mit Bereichsauswahl, Lautstärke-Hüllkurve, Schneiden/Stille/Fades/Normalisieren/Rückwärts, Solo, Pegelanzeige, Mikrofon-Aufnahme · Filter: Brummen entfernen, Rauschen entfernen (Profil oder automatisch), Klicks entfernen, De-Esser, Hoch-/Tief-/Bandpass, 3- und 10-Band-EQ, Kompressor, Limiter, Hall, Echo, Tonhöhe, Mono, Kanäle, Balance, Stille entfernen
 - **Export:** Video als MP4 oder MOV (H.264 oder ProRes 422) in 4K, 2K, 1080p, 720p, 480p, 360p · 16:9, 9:16, 1:1 · Grafikkarten-Beschleunigung · nur Ton als WAV, MP3, FLAC, OGG, M4A · Einzelbild als PNG · Bereich: alles, Auswahl oder zwischen Markern
-- Deutsch & Englisch, Tag- und Nachtmodus in den Logo-Farben, Tooltips nach 2 s, Hilfe (DE/EN), Info-Seite mit allen Lizenzen, automatische Sicherung
+- Deutsch & Englisch, Tag- und Nachtmodus in den Logo-Farben, Tooltips nach 1 s, Hilfe (DE/EN), Info-Seite mit allen Lizenzen, automatische Sicherung
 
 ### Selbst bauen
 ```
