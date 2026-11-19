@@ -262,16 +262,20 @@ class ExportJob {
   constructor(project, opts, textImages, onProgress) {
     this.p = project; this.opts = opts; this.textImages = textImages || {}; this.onProgress = onProgress || (() => {});
     this.cancelled = false; this.proc = null;
+    this.debugLog = [];
   }
   cancel() { this.cancelled = true; if (this.proc) try { this.proc.kill('SIGKILL'); } catch (e) { /* */ } }
 
   async runFF(args, cwd, base, span, durSec) {
     if (this.cancelled) throw new Error('CANCELLED');
     let log = '';
+    const entry = { t: Date.now(), args: args.filter(a => !String(a).includes('\n')).join(' ').slice(0, 300) };
+    this.debugLog.push(entry);
+    if (this.debugLog.length > 30) this.debugLog.shift();
     const res = await ff.run(args.concat(['-progress', 'pipe:1', '-nostats']), {
       collect: false,
       onSpawn: (pr) => { this.proc = pr; },
-      onStderr: (s) => { log += s; if (log.length > 40000) log = log.slice(-20000); },
+      onStderr: (s) => { log += s; if (log.length > 40000) log = log.slice(-20000); entry.tail = log.slice(-600); },
       onStdout: (d) => {
         const mm = /out_time_us=(\d+)/.exec(d.toString()) || /out_time_ms=(\d+)/.exec(d.toString());
         if (mm && durSec > 0) this.onProgress(base + span * Math.min(1, (+mm[1] / 1e6) / durSec));
@@ -290,6 +294,7 @@ class ExportJob {
     const { w: W, h: H } = core.outputSize(o.aspect || p.settings.aspect, o.short || 1080);
     const fps = +o.fps || p.settings.fps || 30;
     const enc = await pickEncoder(o);
+    this.debugLog.push({ t: Date.now(), encoder: enc });
     const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'slaxxcut-'));
     let uidN = 0;
     const ctx = { tmp, textImages: this.textImages, uid: () => (++uidN).toString(36) };

@@ -254,6 +254,8 @@ async function runSmoke(w, outFile) {
   setTimeout(async () => {
     result.error = 'timeout';
     try { result.lastStep = await w.webContents.executeJavaScript('window.__smokeStep'); } catch (e) { /* */ }
+    if (currentExport) result.exportLog = currentExport.debugLog;
+    try { result.encoders = await ff.encoders(); } catch (e) { /* */ }
     finish();
   }, 240000);
   try {
@@ -282,7 +284,7 @@ async function runSmoke(w, outFile) {
       window.__smokeStep = 'render';
       SC.program.seek(1.0); await wait(1500);
       const cv = SC.programMonitor.canvas; const gl = cv.getContext('webgl2');
-      window.__smokeStep = 'export';
+      window.__smokeStep = 'export:' + JSON.stringify(await window.api.encoders());
       const px = new Uint8Array(4); gl.readPixels(Math.floor(cv.width / 2), Math.floor(cv.height / 2), 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px);
       const p = SC.store.S.project; const texts = {};
       for (const c of p.clips.filter(c => c.kind === 'text')) texts[c.id] = await SC.text.toDataURL(c, 640, 360);
