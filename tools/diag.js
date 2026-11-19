@@ -46,9 +46,25 @@ try {
     const C = (o) => Object.assign({ id: core.uid('c'), speed: 1, volume: 0, fadeIn: 0, fadeOut: 0, effects: [] }, o);
     p.clips.push(C({ trackId: p.tracks[1].id, kind: 'video', mediaId: 'm', start: 0, in: 0, out: 2 }));
     const job = new ExportJob(p, { path: path.join(dir, 'job.mp4'), short: 360, aspect: '16:9', fps: 25, quality: 'low', encoder: 'libx264' }, {}, () => { });
-    const to = setTimeout(() => { console.log('exporter: TIMEOUT', JSON.stringify(job.debugLog).slice(0, 1500)); job.cancel(); process.exit(0); }, 40000);
+    const to = setTimeout(() => { console.log('exporter: TIMEOUT', JSON.stringify(job.debugLog).slice(0, 1500)); job.cancel(); process.exit(0); }, 400000);
     const r = await job.start();
     clearTimeout(to);
     console.log('exporter: OK', r.encoder);
+    // exact smoke-test project: 2 clips + crossfade + vintage + zoomIn + text PNG
+    const p2 = core.newProject();
+    p2.media.push(Object.assign({ id: 'm' }, info));
+    const a = C({ trackId: p2.tracks[1].id, kind: 'video', mediaId: 'm', start: 0, in: 0, out: 2, effects: [{ type: 'vintage' }], transOut: { type: 'crossfade', d: 1 } });
+    const b = C({ trackId: p2.tracks[1].id, kind: 'video', mediaId: 'm', start: 2, in: 2, out: 4, effects: [{ type: 'zoomIn' }], transIn: { type: 'crossfade', d: 1 } });
+    const t = C({ trackId: p2.tracks[0].id, kind: 'text', start: 0.5, in: 0, out: 1.5 });
+    p2.clips.push(a, b, t);
+    const variants = { full: p2, noText: Object.assign({}, p2, { clips: [a, b] }), noTrans: Object.assign({}, p2, { clips: [Object.assign({}, a, { transOut: null }), Object.assign({}, b, { transIn: null }), t] }), noFx: Object.assign({}, p2, { clips: [Object.assign({}, a, { effects: [] }), Object.assign({}, b, { effects: [] }), t] }) };
+    for (const [name, proj] of Object.entries(variants)) {
+      const j2 = new ExportJob(proj, { path: path.join(dir, name + '.mp4'), short: 360, aspect: '16:9', fps: 25, quality: 'low', encoder: 'libx264' }, { [t.id]: png }, () => { });
+      const t0 = Date.now();
+      const res = await Promise.race([j2.start().then(() => 'OK'), new Promise(r => setTimeout(() => r('TIMEOUT'), 45000))]);
+      if (res === 'TIMEOUT') { const last = j2.debugLog[j2.debugLog.length - 1] || {}; console.log('smoke-' + name + ': TIMEOUT', (last.args || '').slice(0, 200), '\n   tail:', (last.tail || '').slice(-300)); j2.cancel(); await new Promise(r => setTimeout(r, 500)); }
+      else console.log('smoke-' + name + ': OK', (Date.now() - t0) + 'ms');
+    }
+    process.exit(0);
   })().catch(e => console.log('exporter: ERR', e.message));
 } catch (e) { console.log('exporter: load error', e.message); }
