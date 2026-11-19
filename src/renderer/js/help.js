@@ -84,7 +84,7 @@
         <h3>Übergänge</h3>
         <p>Ziehe einen Übergang auf den <b>Schnitt zwischen zwei Clips</b> (ein blauer Balken zeigt die Stelle) – oder auf den Anfang/das Ende eines einzelnen Clips. Ein kleines Symbol am Clip zeigt den Übergang: Klick öffnet die Einstellungen, Rechtsklick entfernt ihn.</p>
         <p>In den Eigenschaften wählst du die <b>Richtung</b> (z. B. Wischen nach links/rechts/oben/unten/diagonal, Kreis öffnen/schließen, Drehen im/gegen den Uhrzeigersinn) und die <b>Dauer</b>.</p>
-        <p>Verfügbar: Ein-/Ausblenden (Schwarz), Blitz (Weiß), Überblendung, Wischen, Hereingleiten, Schieben, Kreis, Jalousie, Zoom (hinein/heraus), Drehen, Whip Pan, Glitch, Pixel, Unschärfe. Übergänge wirken auf Bild <b>und</b> Ton.</p>`],
+        <p>Verfügbar: Ein-/Ausblenden (Schwarz), Blitz (Weiß), Überblendung, Wischen, Hereingleiten, Schieben, Kreis, Jalousie, Zoom (hinein/heraus), Drehen, Whip Pan, Glitch, Pixel, Unschärfe, Raute, Uhr, Tor, Schachbrett, Punkte, Kacheln, Welle, Kamm und Fallen. Übergänge wirken auf Bild <b>und</b> Ton.</p>`],
       ['text', 'Text & Vorlagen', `
         <h3>Text und Vorlagen</h3>
         <p>Im Reiter Effekte unter <b>Texteffekte</b> findest du fertige Vorlagen: <b>Freier Text, Bauchbinde, Info-Leiste, Titel-Box, Ecken-Badge, Laufschrift</b> und <b>Abspann</b>. Einfach in eine Spur über dem Video ziehen.</p>
@@ -242,7 +242,7 @@
         <h3>Transitions</h3>
         <p>Drag a transition onto the <b>cut between two clips</b> (a blue bar shows the spot) – or onto the start/end of a single clip. A small icon on the clip shows the transition: click opens its settings, right-click removes it.</p>
         <p>In the properties you choose the <b>direction</b> (e.g. wipe left/right/up/down/diagonal, circle open/close, spin clockwise/counter-clockwise) and the <b>duration</b>.</p>
-        <p>Available: fade (black), flash (white), crossfade, wipe, slide in, push, circle, blinds, zoom (in/out), spin, whip pan, glitch, pixels, blur. Transitions affect picture <b>and</b> sound.</p>`],
+        <p>Available: fade (black), flash (white), crossfade, wipe, slide in, push, circle, blinds, zoom (in/out), spin, whip pan, glitch, pixels, blur, diamond, clock, barn door, checkerboard, dots, tiles, wave, comb and drop. Transitions affect picture <b>and</b> sound.</p>`],
       ['text', 'Text & templates', `
         <h3>Text and templates</h3>
         <p>In the Effects tab under <b>Text effects</b> you find ready-made templates: <b>free text, lower third, info bar, title box, corner badge, news ticker</b> and <b>credits</b>. Just drag one onto a track above the video.</p>

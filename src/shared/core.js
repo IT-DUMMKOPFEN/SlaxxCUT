@@ -241,8 +241,18 @@
     whip: { icon: 'whip', dirs: ['rl', 'lr', 'tb', 'bt'] },
     glitch: { icon: 'glitch' },
     pixel: { icon: 'pixelate' },
-    blur: { icon: 'blur' }
+    blur: { icon: 'blur' },
+    diamond: { icon: 'diamond', dirs: ['open', 'close'] },
+    clock: { icon: 'clock', dirs: ['cw', 'ccw'] },
+    barn: { icon: 'barn', dirs: ['h', 'v'] },
+    checker: { icon: 'checker' },
+    dots: { icon: 'dots' },
+    tiles: { icon: 'tiles' },
+    wave: { icon: 'twave', dirs: DIR4 },
+    comb: { icon: 'comb', dirs: ['h', 'v'] },
+    drop: { icon: 'drop', dirs: ['tb', 'bt'] }
   };
+  const MASK_TRANSITIONS = ['wipe', 'iris', 'blinds', 'diamond', 'clock', 'barn', 'checker', 'dots', 'tiles', 'wave', 'comb'];
   function transDir(tr) { const d = TRANSITIONS[tr.type]; return d && d.dirs ? (d.dirs.includes(tr.dir) ? tr.dir : d.dirs[0]) : null; }
 
   function defaultParams(type) {
@@ -504,12 +514,18 @@
         if (role === 'in') P.alpha.push({ a: w.w0, b: w.w1, dir: 'in' });
         else if (!w.paired) P.alpha.push({ a: w.w0, b: w.w1, dir: 'out' });
         break;
-      case 'wipe':
-      case 'iris':
-      case 'blinds': {
+      case 'wipe': case 'iris': case 'blinds': case 'diamond': case 'clock': case 'barn':
+      case 'checker': case 'dots': case 'tiles': case 'wave': case 'comb': {
         const kind = w.type === 'wipe' ? 'linear' : w.type;
+        const flip = w.type === 'iris' || w.type === 'diamond';
         if (role === 'in') P.mask = { kind, dir: w.dir, a: w.w0, b: w.w1, mode: 'reveal' };
-        else if (!w.paired) P.mask = { kind, dir: w.type === 'iris' ? (w.dir === 'open' ? 'close' : 'open') : w.dir, a: w.w0, b: w.w1, mode: 'hide' };
+        else if (!w.paired) P.mask = { kind, dir: flip ? (w.dir === 'open' ? 'close' : 'open') : w.dir, a: w.w0, b: w.w1, mode: 'hide' };
+        break;
+      }
+      case 'drop': { // falls in from above (or below) and bounces
+        const sg = w.dir === 'bt' ? '' : '-';
+        if (role === 'in') P.y = sg + '(1-' + u + ')*(1-' + u + ')*abs(cos(' + u + '*PI*2.5))';
+        else if (!w.paired) { P.y = (w.dir === 'bt' ? '-' : '') + '1.05*(' + u + ')*(' + u + ')'; }
         break;
       }
       case 'slide':
@@ -573,6 +589,19 @@
   }
   /** mask coordinate s in [0,1]; expression uses X,Y,W,H (pixels of the layer) */
   function maskS(kind, dir) {
+    const fr = (e) => '(' + e + '-floor(' + e + '))';
+    if (kind === 'diamond') return dir === 'close' ? '(1-abs(X/W-0.5)-abs(Y/H-0.5))' : '(abs(X/W-0.5)+abs(Y/H-0.5))';
+    if (kind === 'clock') { const a = '(mod(atan2(X/W-0.5,0.5-Y/H)+2*PI,2*PI)/(2*PI))'; return dir === 'ccw' ? '(1-' + a + ')' : a; }
+    if (kind === 'barn') return dir === 'v' ? '(abs(Y/H-0.5)*2)' : '(abs(X/W-0.5)*2)';
+    if (kind === 'checker') return '(0.5*mod(floor(X/W*8)+floor(Y/H*4.5),2)+0.5*floor(X/W*8)/8)';
+    if (kind === 'dots') return '(0.7*hypot(' + fr('X/W*16') + '-0.5,' + fr('Y/H*9') + '-0.5)/0.70711+0.15*(X/W+Y/H))';
+    if (kind === 'tiles') return '(0.98*' + fr('sin(floor(X/W*16)*12.9898+floor(Y/H*9)*78.233)*437.5453') + ')';
+    if (kind === 'wave') {
+      const v = (dir === 'tb' || dir === 'bt') ? ['Y/H', 'X/W'] : ['X/W', 'Y/H'];
+      const p = (dir === 'rl' || dir === 'bt') ? '(1-' + v[0] + ')' : '(' + v[0] + ')';
+      return '(' + p + '*0.86+0.07+0.07*sin(' + v[1] + '*18.85))';
+    }
+    if (kind === 'comb') return dir === 'v' ? 'if(mod(floor(X/W*10),2),1-Y/H,Y/H)' : 'if(mod(floor(Y/H*10),2),1-X/W,X/W)';
     if (kind === 'iris') return dir === 'close' ? '(1-hypot(X/W-0.5,Y/H-0.5)/0.70711)' : '(hypot(X/W-0.5,Y/H-0.5)/0.70711)';
     if (kind === 'blinds') return dir === 'v' ? '(X/W*8-floor(X/W*8))' : '(Y/H*8-floor(Y/H*8))';
     return ({
@@ -582,8 +611,8 @@
   }
   const MASK_EDGE = 0.04;
   function maskCodes(kind, dir) {
-    const kinds = { linear: 1, iris: 2, blinds: 3 };
-    const dirs = { lr: 0, rl: 1, tb: 2, bt: 3, tlbr: 4, trbl: 5, bltr: 6, brtl: 7, open: 0, close: 1, h: 0, v: 1 };
+    const kinds = { linear: 1, iris: 2, blinds: 3, diamond: 4, clock: 5, barn: 6, checker: 7, dots: 8, tiles: 9, wave: 10, comb: 11 };
+    const dirs = { lr: 0, rl: 1, tb: 2, bt: 3, tlbr: 4, trbl: 5, bltr: 6, brtl: 7, open: 0, close: 1, h: 0, v: 1, cw: 0, ccw: 1 };
     return { kind: kinds[kind] || 0, dir: dirs[dir] || 0 };
   }
 
@@ -972,7 +1001,7 @@
     EFFECTS, EFFECT_CATS, AUDIO_CATS, TRANSITIONS, transDir, defaultParams, fxParams, colorOps, geoOf, geoSize,
     isColorEffect, isMotionEffect, isGeoEffect, isAudioEffect, isRenderAudioEffect, motionExpr,
     KEY_PROPS, keyList, keyExpr, keyValueAt,
-    neighbors, transWindows, maxTransDur, maskS, maskCodes, MASK_EDGE,
+    neighbors, transWindows, maxTransDur, maskS, maskCodes, MASK_EDGE, MASK_TRANSITIONS,
     TEXT_TEMPLATES, TEXT_ANIMS, textScroll,
     planVisual, planClip, planClipLayers, planAudio, evalLayer, sourceTime, rampValue,
     impulseResponse, audioLiveChain, audioRenderChain, audioRenderJob, atempoChain,

@@ -104,6 +104,21 @@
   uniform float u_glitch; uniform float u_blur; uniform int u_blurV; uniform float u_seed;
   float rnd(vec2 p){ return fract(sin(dot(p, vec2(12.9898,78.233)) + u_seed) * 43758.5453); }
   float maskS(vec2 q){
+    if (u_maskKind == 4) { float d = abs(q.x - 0.5) + abs(q.y - 0.5); return u_maskDir == 1 ? 1.0 - d : d; }
+    if (u_maskKind == 5) { float a = mod(atan(q.x - 0.5, 0.5 - q.y) + 6.2831853, 6.2831853) / 6.2831853; return u_maskDir == 1 ? 1.0 - a : a; }
+    if (u_maskKind == 6) { return u_maskDir == 1 ? abs(q.y - 0.5) * 2.0 : abs(q.x - 0.5) * 2.0; }
+    if (u_maskKind == 7) { return 0.5 * mod(floor(q.x * 8.0) + floor(q.y * 4.5), 2.0) + 0.5 * floor(q.x * 8.0) / 8.0; }
+    if (u_maskKind == 8) { return 0.7 * length(fract(vec2(q.x * 16.0, q.y * 9.0)) - 0.5) / 0.70711 + 0.15 * (q.x + q.y); }
+    if (u_maskKind == 9) { return 0.98 * fract(sin(floor(q.x * 16.0) * 12.9898 + floor(q.y * 9.0) * 78.233) * 437.5453); }
+    if (u_maskKind == 10) {
+      bool vert = u_maskDir == 2 || u_maskDir == 3; float a = vert ? q.y : q.x; float b = vert ? q.x : q.y;
+      if (u_maskDir == 1 || u_maskDir == 3) a = 1.0 - a;
+      return a * 0.86 + 0.07 + 0.07 * sin(b * 18.85);
+    }
+    if (u_maskKind == 11) {
+      if (u_maskDir == 1) return mod(floor(q.x * 10.0), 2.0) > 0.5 ? 1.0 - q.y : q.y;
+      return mod(floor(q.y * 10.0), 2.0) > 0.5 ? 1.0 - q.x : q.x;
+    }
     if (u_maskKind == 2) { float d = length(q - 0.5) / 0.70711; return u_maskDir == 1 ? 1.0 - d : d; }
     if (u_maskKind == 3) { return u_maskDir == 1 ? fract(q.x * 8.0) : fract(q.y * 8.0); }
     if (u_maskDir == 0) return q.x; if (u_maskDir == 1) return 1.0 - q.x; if (u_maskDir == 2) return q.y; if (u_maskDir == 3) return 1.0 - q.y;
