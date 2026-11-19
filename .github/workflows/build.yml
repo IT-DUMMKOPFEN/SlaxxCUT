@@ -72,6 +72,18 @@ jobs:
         if: runner.os == 'Windows'
         run: npx electron-builder --win nsis portable --x64 --publish never
 
+      - name: FFmpeg filter diagnostic (Windows)
+        if: runner.os == 'Windows'
+        continue-on-error: true
+        shell: bash
+        run: |
+          node -e "
+          const {spawnSync}=require('child_process');const ff=require('ffmpeg-static');
+          const t=(name,g)=>{const r=spawnSync(ff,['-nostdin','-hide_banner','-f','lavfi','-i','testsrc2=s=320x180:d=1,format=rgba','-filter_complex',g,'-f','null','-'],{timeout:20000});console.log(name, r.error?'TIMEOUT/ERR '+r.error.code:'exit '+r.status)};
+          t('split-alphamerge','[0:v]split[a][b];[b]alphaextract[al];[a]vignette,format=rgb24[c];[c][al]alphamerge[o]');
+          t('geq-vignette','[0:v]geq=r='r(X,Y)':g='g(X,Y)':b='b(X,Y)':a='alpha(X,Y)'[o]');
+          "
+
       - name: Smoke test (Windows)
         if: runner.os == 'Windows'
         shell: bash

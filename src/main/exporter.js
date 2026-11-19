@@ -37,9 +37,9 @@ function colorFilters(ops, ctx) {
         break;
       }
       case 'vignette': {
-        // vignette drops alpha → process colour and re-attach alpha
-        const id = ctx.uid();
-        f.push(`split[vga${id}][vgb${id}];[vgb${id}]alphaextract[vgal${id}];[vga${id}]vignette=angle=${N(o.a)},format=rgb24[vgc${id}];[vgc${id}][vgal${id}]alphamerge,format=rgba`);
+        // single-pass vignette (keeps alpha, no split/merge): factor = cos(a·d/dmax)^4, d = distance to centre
+        const k = `pow(cos(min(${N(o.a)}*hypot(X-W/2,Y-H/2)/hypot(W/2,H/2),PI/2)),4)`;
+        f.push(`geq=r='r(X,Y)*${k}':g='g(X,Y)*${k}':b='b(X,Y)*${k}':a='alpha(X,Y)'`);
         break;
       }
       case 'grain': f.push(`format=gbrap,noise=c0s=${Math.round(o.n)}:c1s=${Math.round(o.n)}:c2s=${Math.round(o.n)}:allf=t+u,format=rgba`); break;
