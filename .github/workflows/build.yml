@@ -36,11 +36,6 @@ jobs:
         shell: bash
         run: node -e "const p=require('ffmpeg-static');console.log(p);require('child_process').execFileSync(p,['-hide_banner','-version'],{stdio:'inherit'})"
 
-      - name: FFmpeg filter diagnostic
-        continue-on-error: true
-        timeout-minutes: 10
-        run: node tools/diag.js
-
       # ---------- macOS (Apple Silicon) ----------
       - name: Build macOS app
         if: runner.os == 'macOS'
