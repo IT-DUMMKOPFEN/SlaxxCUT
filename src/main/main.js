@@ -1,6 +1,6 @@
 /* SlaxxCUT – Electron main process. Done by IT-DUMMKOPFEN – GPL-3.0-or-later */
 'use strict';
-const { app, BrowserWindow, ipcMain, dialog, protocol, shell, Menu, session, nativeTheme } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, protocol, shell, Menu, session, nativeTheme, systemPreferences } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { Readable } = require('stream');
@@ -29,6 +29,9 @@ const userDir = () => app.getPath('userData');
 const cacheDir = () => { const d = path.join(userDir(), 'cache'); fs.mkdirSync(d, { recursive: true }); return d; };
 const settingsFile = () => path.join(userDir(), 'settings.json');
 const autosaveFile = () => path.join(userDir(), 'autosave.slaxxcut');
+const docsDir = (sub) => { const d = path.join(app.getPath('documents'), 'SlaxxCUT', sub); fs.mkdirSync(d, { recursive: true }); return d; };
+const afxDir = () => { const d = path.join(cacheDir(), 'afx'); fs.mkdirSync(d, { recursive: true }); return d; };
+const jobProcs = new Map();
 
 /* ---------------- protocol ---------------- */
 const MIME = {
@@ -222,6 +225,31 @@ function setupIpc() {
     return n;
   });
 
+  // derived media & audio processing jobs (progress → 'job:progress', id, 0..1)
+  const prog = (id) => (k) => send('job:progress', id, k);
+  const spawnReg = (id) => (proc) => jobProcs.set(id, proc);
+  ipcMain.handle('media:reverse', (e, id, info, start, end) => ff.reverseMedia(info, start, end, docsDir('Berechnet'), prog(id), spawnReg(id)).finally(() => jobProcs.delete(id)));
+  ipcMain.handle('media:stabilize', (e, id, info, start, end) => ff.stabilizeMedia(info, start, end, docsDir('Berechnet'), prog(id), spawnReg(id)).finally(() => jobProcs.delete(id)));
+  ipcMain.handle('media:freeze', (e, file, t) => ff.freezeFrame(file, t, docsDir('Berechnet')));
+  ipcMain.handle('audio:render', (e, id, job) => ff.renderAudio(job, afxDir(), prog(id), spawnReg(id)).finally(() => jobProcs.delete(id)));
+  ipcMain.handle('audio:levels', (e, file, start, dur) => ff.audioLevels(file, start, dur));
+  ipcMain.handle('audio:silence', (e, file, start, dur, th, min) => ff.detectSilence(file, start, dur, th, min));
+  ipcMain.handle('job:cancel', (e, id) => { const pr = jobProcs.get(id); if (pr) try { pr.kill('SIGKILL'); } catch (err) { /* */ } return true; });
+  ipcMain.handle('mic:access', async () => {
+    if (process.platform !== 'darwin') return true;
+    try { return await systemPreferences.askForMediaAccess('microphone'); } catch (err) { return false; }
+  });
+  ipcMain.handle('rec:save', async (e, data, ext) => {
+    const d = docsDir('Aufnahmen');
+    const stamp = new Date().toISOString().replace(/[:T]/g, '-').replace(/\..*/, '');
+    const raw = path.join(d, 'Aufnahme-' + stamp + '.' + (ext || 'webm'));
+    fs.writeFileSync(raw, Buffer.from(data));
+    const wav = raw.replace(/\.[^.]+$/, '.wav');
+    await ff.toWav(raw, wav);
+    try { fs.unlinkSync(raw); } catch (err) { /* */ }
+    return wav;
+  });
+
   ipcMain.handle('export:encoders', () => ff.encoders());
   ipcMain.handle('export:start', async (e, project, opts, textImages) => {
     if (currentExport) throw new Error('BUSY');
@@ -232,7 +260,7 @@ function setupIpc() {
       fs.writeFileSync(f, Buffer.from(String(dataUrl).split(',')[1], 'base64'));
       files[id] = f;
     }
-    currentExport = new ExportJob(project, opts, files, (k) => send('export:progress', k));
+    currentExport = new ExportJob(project, Object.assign({ audioCache: afxDir() }, opts), files, (k) => send('export:progress', k));
     try {
       return await currentExport.start();
     } finally {
@@ -277,9 +305,12 @@ async function runSmoke(w, outFile) {
         const S = SC.store.S;
         const a = SC.edit.placeMedia(m, S.project.tracks[1].id, 0, 0, 2);
         const b = SC.edit.placeMedia(m, S.project.tracks[1].id, 2, 2, 4);
-        SC.edit.applyEffect(a, 'vintage'); SC.edit.applyEffect(b, 'zoomIn');
-        SC.edit.applyTransition(b, 'in', 'crossfade');
-        const t = SC.edit.makeText({ start: 0.5, out: 2, trackId: S.project.tracks[0].id }); S.project.clips.push(t);
+        SC.edit.applyEffect(a, 'vintage'); SC.edit.applyEffect(a, 'vhs'); SC.edit.applyEffect(b, 'zoomIn'); SC.edit.applyEffect(b, 'glow');
+        SC.edit.applyEffect(a, 'dehum'); SC.edit.applyEffect(b, 'eq3'); SC.edit.applyEffect(b, 'reverb');
+        SC.edit.applyTransition(a, 'out', 'wipe', 1, 'left'); SC.edit.applyTransition(b, 'in', 'wipe', 1, 'left');
+        SC.edit.setKey(a, 'scale', 0, 1); SC.edit.setKey(a, 'scale', 1.5, 1.3);
+        const t = SC.edit.makeText({ start: 0.5, out: 2, trackId: S.project.tracks[0].id }, 'lower'); S.project.clips.push(t);
+        const tk = SC.edit.makeText({ start: 2, out: 2, trackId: S.project.tracks[0].id }, 'ticker'); S.project.clips.push(tk);
       });
       window.__smokeStep = 'render';
       SC.program.seek(1.0); await wait(1500);
@@ -288,16 +319,22 @@ async function runSmoke(w, outFile) {
       const px = new Uint8Array(4); gl.readPixels(Math.floor(cv.width / 2), Math.floor(cv.height / 2), 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px);
       window.__smokeStep = 'export-start'; SC.program.suspended = true;
       const p = SC.store.S.project; const texts = {};
-      for (const c of p.clips.filter(c => c.kind === 'text')) texts[c.id] = await SC.text.toDataURL(c, 640, 360);
+      for (const c of p.clips.filter(c => c.kind === 'text')) Object.assign(texts, await SC.text.toImages(c, 640, 360));
       const res = await window.api.exportStart(JSON.parse(JSON.stringify(p)), { path: ${JSON.stringify(out)}, short: 360, aspect: '16:9', fps: 25, quality: 'low', encoder: 'auto' }, texts);
-      return { pixel: Array.from(px), clips: p.clips.length, export: res, errors: errs, lang: SC.i18n.lang };
+      window.__smokeStep = 'export-wav';
+      const wav = await window.api.exportStart(JSON.parse(JSON.stringify(p)), { path: ${JSON.stringify(out.replace(/mp4$/, 'wav'))}, format: 'wav', bits: 16, rate: 48000 }, {});
+      window.__smokeStep = 'export-mov';
+      const mov = await window.api.exportStart(JSON.parse(JSON.stringify(p)), { path: ${JSON.stringify(out.replace(/mp4$/, 'mov'))}, format: 'mov', vcodec: 'h264', short: 360, aspect: '16:9', fps: 25, quality: 'low', encoder: 'software' }, texts);
+      return { pixel: Array.from(px), clips: p.clips.length, export: res, wav, mov, errors: errs, lang: SC.i18n.lang };
     })()`;
     const rr = await w.webContents.executeJavaScript(js);
     result.renderer = rr;
     const st = fs.statSync(out);
     const pr = await ff.probe(out);
     result.exportSize = st.size; result.exportDuration = pr.duration;
-    result.ok = st.size > 1000 && Math.abs(pr.duration - 4) < 0.3 && rr.pixel.some(v => v > 10) && !rr.errors.length;
+    const pw = await ff.probe(out.replace(/mp4$/, 'wav')), pm = await ff.probe(out.replace(/mp4$/, 'mov'));
+    result.wavDuration = pw.duration; result.movDuration = pm.duration;
+    result.ok = st.size > 1000 && Math.abs(pr.duration - 4) < 0.3 && Math.abs(pw.duration - 4) < 0.3 && Math.abs(pm.duration - 4) < 0.3 && rr.pixel.some(v => v > 10) && !rr.errors.length;
   } catch (e) { result.error = String(e && e.stack || e); }
   finish();
 }

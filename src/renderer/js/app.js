@@ -22,10 +22,14 @@
       SC.inspector.build();
       SC.source.build();
       SC.programMonitor.build();
+      SC.audioEditor.build();
       this.buildToolbar();
       SC.timeline.build();
       this.initSplitter();
       this.initKeys();
+      this.setMode(S.settings.mode === 'audio' ? 'audio' : 'video', true);
+      const meters = () => { SC.audioEditor.tickMeters(); const v = SC.programMonitor.vu; if (v) { const lv = SC.program.levels(); v.querySelectorAll('i').forEach((b, i) => { b.style.width = Math.max(0, Math.min(100, (lv[i] + 60) / 60 * 100)) + '%'; }); } requestAnimationFrame(meters); };
+      requestAnimationFrame(meters);
       SC.i18n.applyDom(document);
       store.initHistory();
       S.selectedTrack = S.project.tracks[0].id;
@@ -62,13 +66,21 @@
       SC.i18n.setLang(l);
       this.saveSettings({ lang: l });
       if (this.langBtn) this.langBtn.querySelector('span').textContent = l.toUpperCase();
-      SC.media.render(); SC.timeline.render(); SC.inspector.refresh(); SC.programMonitor.sync();
+      SC.media.render(); SC.timeline.render(); SC.inspector.refresh(); SC.programMonitor.sync(); SC.effectsPanel.refresh();
       this.updateTitle();
     },
 
     /* ---------------- top bar ---------------- */
     buildTopbar() {
       const r = $('#topbarRight');
+      this.modeSw = el('div', { class: 'mode-switch' });
+      for (const [m, ic] of [['video', 'film2'], ['audio', 'wave']]) {
+        const b = el('button', { type: 'button', 'data-tip': 'tip.mode.' + m, dataset: { mode: m } });
+        b.innerHTML = SC.icon(ic) + '<span data-i18n="mode.' + m + '"></span>';
+        b.addEventListener('click', () => this.setMode(m));
+        this.modeSw.append(b);
+      }
+      r.append(this.modeSw);
       this.langBtn = el('button', { class: 'ibtn lang-btn', 'data-tip': 'tip.lang', type: 'button' });
       this.langBtn.innerHTML = SC.icon('globe') + '<span>' + (SC.i18n.lang || 'de').toUpperCase() + '</span>';
       this.langBtn.addEventListener('click', () => this.setLang(SC.i18n.lang === 'de' ? 'en' : 'de'));
@@ -99,6 +111,21 @@
       this.updateTools();
     },
 
+    /* ---------------- video / audio mode ---------------- */
+    setMode(m, initial) {
+      this.mode = m;
+      document.body.classList.toggle('mode-audio', m === 'audio');
+      S.trackH = m === 'audio' ? 86 : 54;
+      document.documentElement.style.setProperty('--track-h', S.trackH + 'px');
+      if (this.modeSw) this.modeSw.querySelectorAll('button').forEach(b => b.classList.toggle('active', b.dataset.mode === m));
+      if (!initial) this.saveSettings({ mode: m });
+      SC.effectsPanel.refresh();
+      SC.timeline.render();
+      if (m === 'audio') SC.audioEditor.activate();
+      else { SC.program.soloClip = null; SC.programMonitor.sync(); }
+      SC.program.needsRender = true;
+    },
+
     /* ---------------- toolbar ---------------- */
     buildToolbar() {
       const tb = $('#toolbar');
@@ -122,7 +149,7 @@
         b('split', 'tool.split', 'split'), b('trash', 'tool.delete', 'delete'), b('ripple', 'tool.ripple', 'ripple'), el('div', { class: 'sep' }),
         this.undoBtn, this.redoBtn, el('div', { class: 'sep' }),
         b('copy', 'tool.copy', 'copy'), b('paste', 'tool.paste', 'paste'), b('duplicate', 'tool.duplicate', 'duplicate'), el('div', { class: 'sep' }),
-        b('detach', 'tool.detach', 'detach'), b('props', 'tool.props', 'props'), el('div', { class: 'sep' }),
+        b('detach', 'tool.detach', 'detach'), b('props', 'tool.props', 'props'), b('marker', 'tool.marker', 'marker'), el('div', { class: 'sep' }),
         this.snapBtn, el('div', { class: 'sep' }),
         b('zoomOut', 'tool.zoomOut', 'zoom-out'), this.zoomSlider, b('zoomIn', 'tool.zoomIn', 'zoom-in'), b('zoomFit', 'tool.zoomFit', 'zoom-fit'), el('div', { class: 'sep' }),
         b('plus', 'tool.addTrack', 'add-track'), b('minus', 'tool.removeTrack', 'remove-track'),
@@ -189,6 +216,14 @@
         case 'save-as': this.saveProject(true); break;
         case 'export': SC.dialogs.exportDialog(); break;
         case 'select-all': store.select(S.project.clips.map(c => c.id)); break;
+        case 'marker': { let mk = null; store.change('marker', () => { mk = edit.addMarker(S.playhead); }); SC.timeline.drawRuler(); if (mk) toast(t('toast.marker')); break; }
+        case 'marker-prev': case 'marker-next': {
+          const ms = (S.project.markers || []).map(m => m.t).sort((a, b) => a - b);
+          const tt = name === 'marker-prev' ? ms.reverse().find(x => x < S.playhead - 0.01) : ms.find(x => x > S.playhead + 0.01);
+          if (tt != null) SC.program.seek(tt);
+          break;
+        }
+        case 'mode-toggle': this.setMode(this.mode === 'audio' ? 'video' : 'audio'); break;
       }
       this.updateTools();
     },
@@ -240,8 +275,10 @@
             case 'k': case 'K': if (src) SC.source.pause(); else SC.program.pause(); break;
             case 'l': case 'L': if (src) SC.source.play(); else SC.program.play(); break;
             case 'j': case 'J': if (src) SC.source.seek(SC.source.cur() - 1); else SC.program.seek(S.playhead - 1); break;
-            case 'ArrowLeft': if (src) SC.source.step(e.shiftKey ? -fps : -1); else { SC.program.pause(); SC.program.seek(S.playhead - (e.shiftKey ? 1 : 1 / fps)); } break;
-            case 'ArrowRight': if (src) SC.source.step(e.shiftKey ? fps : 1); else { SC.program.pause(); SC.program.seek(S.playhead + (e.shiftKey ? 1 : 1 / fps)); } break;
+            case 'm': case 'M': this.cmd('marker'); break;
+            case 'Tab': this.cmd('mode-toggle'); break;
+            case 'ArrowLeft': if (e.altKey) { this.cmd('marker-prev'); break; } if (src) SC.source.step(e.shiftKey ? -fps : -1); else { SC.program.pause(); SC.program.seek(S.playhead - (e.shiftKey ? 1 : 1 / fps)); } break;
+            case 'ArrowRight': if (e.altKey) { this.cmd('marker-next'); break; } if (src) SC.source.step(e.shiftKey ? fps : 1); else { SC.program.pause(); SC.program.seek(S.playhead + (e.shiftKey ? 1 : 1 / fps)); } break;
             case 'Home': if (src) SC.source.seek(0); else SC.program.seek(0); break;
             case 'End': if (src) SC.source.seek(SC.source.duration()); else SC.program.seek(core.projectDuration(S.project)); break;
             case 'i': case 'I': SC.source.mark('in'); break;
@@ -313,6 +350,7 @@
     loadProjectObject(p, file) {
       if (!p || !Array.isArray(p.tracks) || !Array.isArray(p.clips)) throw new Error('Invalid project file');
       p.media = p.media || [];
+      p.markers = p.markers || [];
       p.settings = Object.assign({ aspect: '16:9', fps: 30 }, p.settings || {});
       if (!p.tracks.length) p.tracks.push(core.newTrack(0));
       p.tracks = p.tracks.slice(0, core.MAX_TRACKS);

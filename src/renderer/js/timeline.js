@@ -4,7 +4,7 @@
   const { el, $, iconBtn, toast, contextMenu, clamp } = SC.ui;
   const core = SC.core, store = SC.store, S = store.S, edit = SC.edit;
   const t = (k) => SC.t(k);
-  const TRACK_H = 54;
+  const TH = () => S.trackH || 54;
   const SNAP_PX = 9;
 
   const TL = {
@@ -51,6 +51,7 @@
       store.on('selection', () => this.updateSelection());
       store.on('playhead', () => { this.updatePlayhead(); this.autoScroll(); });
       store.on('runtime', () => this.render());
+      store.on('renderprogress', () => { clearTimeout(this._rp); this._rp = setTimeout(() => this.render(), 150); });
       this.render();
     },
 
@@ -60,7 +61,7 @@
     clientToTime(clientX) { const r = this.scroll.getBoundingClientRect(); return Math.max(0, (clientX - r.left + this.scroll.scrollLeft) / S.zoom); },
     clientToTrack(clientY) {
       const r = this.scroll.getBoundingClientRect();
-      const i = Math.floor((clientY - r.top + this.scroll.scrollTop) / TRACK_H);
+      const i = Math.floor((clientY - r.top + this.scroll.scrollTop) / TH());
       return clamp(i, 0, S.project.tracks.length - 1);
     },
     contentWidth() {
@@ -75,7 +76,7 @@
       this.countEl.textContent = p.tracks.length + '/' + core.MAX_TRACKS;
       const W = this.contentWidth();
       this.content.style.width = W + 'px';
-      this.content.style.height = (p.tracks.length * TRACK_H) + 'px';
+      this.content.style.height = (p.tracks.length * TH()) + 'px';
       // heads
       this.heads.innerHTML = '';
       this.tracksEl.innerHTML = '';
@@ -133,7 +134,7 @@
       // waveform
       const audible = c.kind === 'audio' || (c.kind === 'video' && m && m.hasAudio && !c.audioDetached);
       if (audible && rt.wave) {
-        const hh = c.kind === 'audio' ? 30 : 16;
+        const hh = c.kind === 'audio' ? Math.max(30, TH() - 24) : (S.trackH > 60 ? 28 : 16);
         const cw = Math.min(4000, Math.ceil(w));
         const cv = el('canvas', { class: 'wave', width: cw, height: hh * 2 });
         cv.style.height = hh + 'px';
@@ -172,6 +173,19 @@
         b.addEventListener('contextmenu', (ev) => { ev.preventDefault(); ev.stopPropagation(); store.change('rm-trans', () => edit.removeTransition(c, edge)); });
         e.append(b);
       }
+      // keyframe diamonds
+      if (c.keys) {
+        const times = new Set();
+        for (const l of Object.values(c.keys)) for (const k of (l || [])) times.add(+k.t.toFixed(3));
+        for (const kt of times) {
+          const kd = el('div', { class: 'kf', style: { left: (kt * S.zoom) + 'px' } });
+          kd.addEventListener('mousedown', (ev) => { ev.stopPropagation(); SC.program.seek(c.start + kt); });
+          e.append(kd);
+        }
+      }
+      // audio pre-render in progress
+      const job = core.audioRenderJob(S.project, c);
+      if (job && SC.program.rendering[job.key] != null) e.append(el('div', { class: 'rbadge', text: SC.t('busy.render') + ' ' + Math.round(SC.program.rendering[job.key] * 100) + '%' }));
       // handles
       const tl = el('div', { class: 'trim l' }), trr = el('div', { class: 'trim r' });
       const fl = el('div', { class: 'fadeh', 'data-tip': 'tip.fadeHandle' }), fr = el('div', { class: 'fadeh', 'data-tip': 'tip.fadeHandle' });
@@ -226,6 +240,41 @@
         }
       }
       ctx.globalAlpha = 1;
+      // markers
+      for (const m of (S.project.markers || [])) {
+        const x = Math.round((m.t - t0) * S.zoom) + 0.5;
+        if (x < -10 || x > w + 10) continue;
+        ctx.fillStyle = m.color || '#ffb547';
+        ctx.beginPath(); ctx.moveTo(x - 5, 0); ctx.lineTo(x + 5, 0); ctx.lineTo(x + 5, 9); ctx.lineTo(x, 14); ctx.lineTo(x - 5, 9); ctx.closePath(); ctx.fill();
+        if (m.label) { ctx.fillStyle = col2; ctx.fillText(m.label, x + 8, h - 13); }
+      }
+      this.drawMarkerLines();
+    },
+    drawMarkerLines() {
+      if (!this.markerLayer) { this.markerLayer = el('div', { class: 'marker-layer' }); this.content.append(this.markerLayer); }
+      this.markerLayer.innerHTML = '';
+      for (const m of (S.project.markers || [])) this.markerLayer.append(el('div', { class: 'marker-line', style: { left: this.x(m.t) + 'px', background: m.color || '#ffb547' } }));
+    },
+    markerAt(clientX) {
+      const r = this.ruler.getBoundingClientRect();
+      const x = clientX - r.left + this.scroll.scrollLeft;
+      return (S.project.markers || []).find(m => Math.abs(m.t * S.zoom - x) < 7) || null;
+    },
+    editMarker(m) {
+      const inp = el('input', { type: 'text', value: m.label || '', style: { width: '100%', height: '30px', borderRadius: '7px', border: '1px solid var(--line)', background: 'var(--bg2)', padding: '0 8px' } });
+      const colors = el('div', { style: { display: 'flex', gap: '6px', marginTop: '10px' } });
+      let col = m.color;
+      for (const cc of SC.edit.MARKER_COLORS) {
+        const b = el('button', { type: 'button', style: { width: '26px', height: '26px', borderRadius: '50%', border: cc === col ? '2px solid var(--text)' : '2px solid transparent', background: cc, cursor: 'pointer' } });
+        b.addEventListener('click', () => { col = cc; colors.querySelectorAll('button').forEach(x => { x.style.borderColor = 'transparent'; }); b.style.borderColor = 'var(--text)'; });
+        colors.append(b);
+      }
+      inp.addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Enter') ok(); });
+      const md = SC.ui.modal({ title: SC.t('marker.edit'), body: el('div', {}, [inp, colors]), cls: 'small' });
+      const ok = () => { store.change('marker', () => { const mm = (S.project.markers || []).find(x => x.id === m.id); if (mm) { mm.label = inp.value.trim(); mm.color = col; } }); md.close(); this.drawRuler(); };
+      md.button(SC.t('ctx.delete'), 'danger', () => { store.change('marker-rm', () => { S.project.markers = S.project.markers.filter(x => x.id !== m.id); }); md.close(); this.drawRuler(); });
+      md.button(SC.t('dlg.ok'), 'primary', ok);
+      setTimeout(() => inp.focus(), 50);
     },
 
     updatePlayhead() {
@@ -284,8 +333,20 @@
 
     /* ---------------- ruler / playhead ---------------- */
     initRuler() {
+      this.ruler.addEventListener('dblclick', (e) => { const m = this.markerAt(e.clientX); if (m) this.editMarker(m); });
+      this.ruler.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        const m = this.markerAt(e.clientX);
+        if (m) contextMenu(e.clientX, e.clientY, [
+          { label: SC.t('marker.edit'), icon: 'marker', action: () => this.editMarker(m) },
+          { label: SC.t('ctx.delete'), icon: 'trash', action: () => { store.change('marker-rm', () => { S.project.markers = S.project.markers.filter(x => x.id !== m.id); }); this.drawRuler(); } }
+        ]);
+        else contextMenu(e.clientX, e.clientY, [{ label: SC.t('tool.marker'), icon: 'marker', action: () => SC.app.cmd('marker') }]);
+      });
       this.ruler.addEventListener('mousedown', (e) => {
         if (e.button !== 0) return;
+        const mk = this.markerAt(e.clientX);
+        if (mk) { SC.program.seek(mk.t); return; }
         const r = this.ruler.getBoundingClientRect();
         const seek = (ev) => SC.program.seek(Math.max(0, (ev.clientX - r.left + this.scroll.scrollLeft) / S.zoom));
         seek(e);
@@ -361,7 +422,7 @@
           if (!ce2) continue;
           ce2.classList.add('dragging');
           ce2.style.left = this.x(o.start + dt) + 'px';
-          ce2.style.transform = 'translateY(' + (dti * TRACK_H) + 'px)';
+          ce2.style.transform = 'translateY(' + (dti * TH()) + 'px)';
         }
       };
       const up = () => {
@@ -481,7 +542,7 @@
           const ids = [];
           S.project.clips.forEach(c => {
             const i = core.trackIndex(S.project, c.trackId);
-            const cx0 = this.x(c.start), cx1 = this.x(core.clipEnd(c)), cy0 = i * TRACK_H, cy1 = cy0 + TRACK_H;
+            const cx0 = this.x(c.start), cx1 = this.x(core.clipEnd(c)), cy0 = i * TH(), cy1 = cy0 + TH();
             if (cx1 > L && cx0 < L + W && cy1 > T && cy0 < T + H) ids.push(c.id);
           });
           S.selection = new Set(additive ? [...before, ...ids] : ids);
@@ -545,7 +606,7 @@
     payload(e) {
       const dt = e.dataTransfer;
       if (dt.types.includes('application/x-slaxx-media')) return SC.dragPayload && SC.dragPayload.kind === 'media' ? SC.dragPayload : { kind: 'media', id: null };
-      if (dt.types.includes('application/x-slaxx-fx')) return { kind: 'fx', type: SC.dragPayload && SC.dragPayload.type };
+      if (dt.types.includes('application/x-slaxx-fx')) return Object.assign({ kind: 'fx' }, SC.dragPayload || {}, { kind: 'fx' });
       if (dt.types.includes('application/x-slaxx-tr')) return { kind: 'tr', type: SC.dragPayload && SC.dragPayload.type };
       if (dt.types.includes('Files')) return { kind: 'files' };
       return null;
@@ -574,13 +635,13 @@
           st = Math.max(0, st);
           if (s1.snapped || s2.snapped) { this.snapLine.style.display = 'block'; this.snapLine.style.left = this.x(s1.snapped ? s1.t : s2.t) + 'px'; }
           this.dropInfo = { ti, start: st };
-          this.ghost = el('div', { class: 'tl-ghost', style: { left: this.x(st) + 'px', width: Math.max(4, len * S.zoom) + 'px', top: (ti * TRACK_H + 3) + 'px' } });
+          this.ghost = el('div', { class: 'tl-ghost', style: { left: this.x(st) + 'px', width: Math.max(4, len * S.zoom) + 'px', top: (ti * TH() + 3) + 'px' } });
           this.content.append(this.ghost);
         } else if (pl.kind === 'fx') {
           if (pl.type === 'text') {
             const st = Math.max(0, this.clientToTime(e.clientX));
             this.dropInfo = { ti, start: st };
-            this.ghost = el('div', { class: 'tl-ghost', style: { left: this.x(st) + 'px', width: 5 * S.zoom + 'px', top: (ti * TRACK_H + 3) + 'px' } });
+            this.ghost = el('div', { class: 'tl-ghost', style: { left: this.x(st) + 'px', width: 5 * S.zoom + 'px', top: (ti * TH() + 3) + 'px' } });
             this.content.append(this.ghost);
           } else {
             const c = this.clipAt(e.clientX, e.clientY);
@@ -592,7 +653,7 @@
           if (tg) {
             this.cutHint.style.display = 'block';
             this.cutHint.style.left = this.x(tg.x) + 'px';
-            this.cutHint.style.top = (tg.ti * TRACK_H + 2) + 'px';
+            this.cutHint.style.top = (tg.ti * TH() + 2) + 'px';
           }
         }
       });
@@ -627,9 +688,9 @@
           });
         } else if (pl.kind === 'fx') {
           const type = pl.type || e.dataTransfer.getData('application/x-slaxx-fx');
-          if (type === 'text') { this.addTextAt(this.dropInfo ? this.dropInfo.start : this.clientToTime(e.clientX), tr.id); return; }
+          if (type === 'text') { this.addTextAt(this.dropInfo ? this.dropInfo.start : this.clientToTime(e.clientX), tr.id, pl.template, pl.props); return; }
           const c = this.clipAt(e.clientX, e.clientY);
-          if (type === 'match') { edit.matchLoudness(S.selection.size ? store.selectedClips() : (c ? [c] : S.project.clips)); return; }
+          if (type === 'match' || type === 'normalize') { SC.edit.runAction(type, S.selection.size ? store.selectedClips() : (c ? [c] : S.project.clips)); return; }
           if (!c) { toast(t('toast.noTarget')); return; }
           store.select(c.id);
           this.applyEffectTo([c], type);
@@ -644,6 +705,7 @@
     },
 
     applyEffectTo(clips, type) {
+      if (SC.effectsPanel.ASYNC.includes(type)) { SC.edit.runAction(type, clips); return; }
       let msg = null;
       store.change('fx', () => { for (const c of clips) { const r = edit.applyEffect(c, type); if (r) msg = r; } });
       if (msg) toast(t(msg), msg === 'toast.fxAdded' || msg === 'toast.detached' || msg === 'toast.speedSet' ? 'ok' : '');
@@ -654,9 +716,9 @@
       store.change('tr', () => edit.applyTransition(c, edge, type));
       toast(t('toast.trAdded'), 'ok');
     },
-    addTextAt(start, trackId) {
+    addTextAt(start, trackId, template, props) {
       store.change('text', () => {
-        const c = edit.makeText({ start: Math.max(0, start) });
+        const c = edit.makeText({ start: Math.max(0, start) }, template, props);
         const d = core.clipDuration(c);
         let tid = trackId || S.project.tracks[0].id;
         if (!edit.isFree(tid, c.start, c.start + d)) tid = edit.findFreeTrack(tid, c.start, c.start + d) || (edit.addTrack() || {}).id || tid;

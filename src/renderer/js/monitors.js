@@ -131,6 +131,7 @@
         this.elx.addEventListener('timeupdate', () => this.update());
         this.elx.addEventListener('loadedmetadata', () => this.update());
         this.elx.addEventListener('ended', () => { this.playing = false; this.update(); });
+        this.elx.addEventListener('pause', () => { if (this.playing) { this.playing = false; this.update(); } });
         this.applyVol();
       }
       this.imgT = 0;
@@ -154,7 +155,7 @@
       if (!this.elx || this.elx.tagName === 'IMG') return;
       if (this.outP != null && this.cur() >= this.outP - 0.02) this.seek(this.inP || 0);
       SC.program.pause();
-      this.elx.play().catch(() => { });
+      this.elx.play().catch(() => { this.playing = false; this.update(); });
       this.playing = true; this.update();
     },
     pause() { if (this.elx && this.elx.pause) this.elx.pause(); this.playing = false; if (this.btnPlay) this.update(); },
@@ -181,7 +182,7 @@
       const d = this.duration();
       const c = this.cur();
       if (this.playing && this.outP != null && c >= this.outP) this.pause();
-      this.btnPlay.innerHTML = SC.icon(this.playing ? 'pause' : 'play');
+      if (this._shownPlaying !== this.playing) { this.btnPlay.innerHTML = SC.icon(this.playing ? 'pause' : 'play'); this._shownPlaying = this.playing; }
       this.scrub.set(d ? c / d : 0);
       this.scrub.range(this.inP != null || this.outP != null ? (this.inP || 0) / (d || 1) : null, this.inP != null || this.outP != null ? (this.outP != null ? this.outP : d) / (d || 1) : null);
       const fps = (this.media && this.media.fps) || S.project.settings.fps;
@@ -229,6 +230,7 @@
       this.volBtn = iconBtn('volume', 'tip.mute', () => { SC.program.setMuted(!SC.program.muted); this.volBtn.innerHTML = SC.icon(SC.program.muted ? 'mute' : 'volume'); });
       this.vol = el('input', { type: 'range', min: 0, max: 1, step: 0.01, value: 1, class: 'vol', 'data-tip': 'tip.volume' });
       this.vol.addEventListener('input', () => SC.program.setVolume(+this.vol.value));
+      this.vu = el('div', { class: 'vu', 'data-tip': 'ae.vu', style: { width: '46px' } }, [el('div', {}, [el('i')]), el('div', {}, [el('i')])]);
       const fps = () => S.project.settings.fps || 30;
       tr.append(
         iconBtn('toStart', 'tip.toStart', () => SC.program.seek(0)),
@@ -239,7 +241,8 @@
         this.btnLoop,
         this.tc,
         el('div', { class: 'spacer' }),
-        this.volBtn, this.vol,
+        this.vu, this.volBtn, this.vol,
+        iconBtn('image', 'tip.snapshot', () => SC.dialogs.exportDialog('image')),
         iconBtn('fullscreen', 'tip.fullscreen', () => { if (document.fullscreenElement) document.exitFullscreen(); else this.viewport.requestFullscreen().catch(() => { }); })
       );
       root.append(head, this.viewport, this.scrub.el, tr);

@@ -1,7 +1,7 @@
 {
   "name": "slaxxcut",
   "productName": "SlaxxCUT",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "SlaxxCUT – modernes Videoschnittprogramm / modern video editor",
   "main": "src/main/main.js",
   "author": "IT-DUMMKOPFEN",
@@ -54,7 +54,10 @@
       "icon": "build/icon.png",
       "identity": null,
       "hardenedRuntime": false,
-      "gatekeeperAssess": false
+      "gatekeeperAssess": false,
+      "extendInfo": {
+        "NSMicrophoneUsageDescription": "SlaxxCUT braucht das Mikrofon für Sprachaufnahmen. / SlaxxCUT needs the microphone to record voice-overs."
+      }
     },
     "win": {
       "icon": "build/icon.png",

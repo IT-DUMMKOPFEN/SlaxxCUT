@@ -28,9 +28,12 @@ xattr -cr /Applications/SlaxxCUT.app
 - **Timeline** mit bis zu 10 Spuren (+/−), Magnet/Einrasten (abschaltbar), Zoom per **mittlerer Maustaste + hoch/runter**, Strg/⌘ + Mausrad oder Trackpad-Pinch
 - Schneiden, Trimmen, Klinge, Löschen mit Lückenschluss, Kopieren/Einfügen, Rückgängig/Wiederholen
 - **Ein-/Ausblenden** direkt am Clip (Anfasser oben links/rechts) für Bild und Ton
-- **Effekte:** Zoom In/Out, Pan & Scan, Kamerawackeln, Parallax, Zeitlupe, Zeitraffer · Schwarz-Weiß, Sepia, Vintage, Film Look, Color Grading (+ LUT), Duotone, HDR-Look · Ton trennen, Lauter, Leiser, Angleichen, Einheitliche Lautstärke · Text einblenden (Schrift, Farbe, Größe, Schatten, Kontur, Box)
-- **Übergänge** für Video, Bild und Ton: Ein-/Ausblenden, Überblendung, Wischen, Zoom, Drehen, Glitch, Whip Pan
-- **Export** als MP4 (H.264/AAC): 4K, 2K, 1080p, 720p, 480p, 360p · 16:9, 9:16, 1:1 · Qualitätsstufen · Grafikkarten-Beschleunigung (VideoToolbox/NVENC/QSV/AMF) · Lautheits-Normalisierung
+- **Effekte (über 40):** Bewegung (Zoom, Pan & Scan, Wackeln, Parallax, Takt-Zoom, Drehen, Zeitlupe/-raffer, Rückwärts, Standbild, Verwackeln reduzieren) · Look (S/W, Sepia, Vintage, Film, Color Grading + LUT, Duotone, HDR, Negativ, Farbton, Comic, VHS, Leuchten, Vignette) · Bild (Weichzeichner, Schärfen, Spiegeln, Drehen, Zuschneiden, Verpixeln auch nur eines Bereichs, Greenscreen, Bild-im-Bild)
+- **Keyframes** für Größe, Position, Drehung, Deckkraft und Lautstärke · **Marker** im Zeitlineal
+- **Übergänge (15) mit Richtung:** Ein-/Ausblenden, Blitz, Überblendung, Wischen (8 Richtungen), Hereingleiten, Schieben, Kreis auf/zu, Jalousie, Zoom, Drehen, Whip Pan, Glitch, Pixel, Unschärfe
+- **Text-Vorlagen:** Bauchbinde, Info-Leiste, Titel-Box, Ecken-Badge, Laufschrift, Abspann – Hintergrund als Farbe, Verlauf oder eigenes Bild, Ein-/Ausblend-Animationen, eigene Vorlagen speichern
+- **Audio-Modus (kleiner Sound-Editor):** große Wellenform mit Bereichsauswahl, Lautstärke-Hüllkurve, Schneiden/Stille/Fades/Normalisieren/Rückwärts, Solo, Pegelanzeige, Mikrofon-Aufnahme · Filter: Brummen entfernen, Rauschen entfernen (Profil oder automatisch), Klicks entfernen, De-Esser, Hoch-/Tief-/Bandpass, 3- und 10-Band-EQ, Kompressor, Limiter, Hall, Echo, Tonhöhe, Mono, Kanäle, Balance, Stille entfernen
+- **Export:** Video als MP4 oder MOV (H.264 oder ProRes 422) in 4K, 2K, 1080p, 720p, 480p, 360p · 16:9, 9:16, 1:1 · Grafikkarten-Beschleunigung · nur Ton als WAV, MP3, FLAC, OGG, M4A · Einzelbild als PNG · Bereich: alles, Auswahl oder zwischen Markern
 - Deutsch & Englisch, Tag- und Nachtmodus in den Logo-Farben, Tooltips nach 2 s, Hilfe (DE/EN), Info-Seite mit allen Lizenzen, automatische Sicherung
 
 ### Selbst bauen
@@ -52,7 +55,7 @@ Get the ready-to-run programs from **[Releases](https://github.com/IT-DUMMKOPFEN
 **Linux:** `chmod +x SlaxxCUT-*.AppImage` and start it (some systems need `libfuse2`).
 
 ### Features
-Three-tab media/effects/transitions panel, source and edit previews, toolbar, timeline with up to 10 tracks, snapping, middle-mouse/pinch zoom, fades on clips, motion/color/audio/text effects, transitions, MP4 export from 360p to 4K in 16:9, 9:16 and 1:1 with hardware acceleration, German/English UI, day/night mode, 2-second tooltips, built-in help and license page.
+Three-tab media/effects/transitions panel, source and edit previews, toolbar, timeline with up to 10 tracks, snapping, middle-mouse/pinch zoom, fades on clips, 40+ motion/look/picture effects (incl. green screen, pixelate area, reverse, stabilize), keyframes, markers, 15 transitions with selectable direction, text templates (lower third, info bar, ticker, credits …) with color/gradient/own picture background, an audio mode that works as a small sound editor (waveform selection, volume envelope, hum/noise/click removal, EQ, compressor, reverb, recording …), export to MP4/MOV (H.264 or ProRes) from 360p to 4K in 16:9, 9:16 and 1:1 with hardware acceleration, audio export to WAV/MP3/FLAC/OGG/M4A and PNG stills, German/English UI, day/night mode, 2-second tooltips, built-in help and license page.
 
 ### Build
 ```

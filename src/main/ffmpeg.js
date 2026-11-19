@@ -208,4 +208,108 @@ async function encoders() {
   return list;
 }
 
-module.exports = { ffmpegPath, run, probe, needsProxy, makeProxy, filmstrip, poster, waveform, measureLoudness, encoders, cacheKey };
+
+/* ---------------- derived media (reverse / stabilize / freeze) ---------------- */
+function progressParser(total, onProgress) {
+  return (d) => {
+    const m = /out_time_ms=(\d+)/.exec(d.toString());
+    if (m && total > 0 && onProgress) onProgress(Math.min(1, +m[1] / 1e6 / total));
+  };
+}
+async function reverseMedia(info, start, end, outDir, onProgress, onSpawn) {
+  const key = cacheKey(info.path) + '_' + Math.round(start * 1000) + '_' + Math.round(end * 1000);
+  const hasV = info.hasVideo && !info.isImage;
+  const out = path.join(outDir, path.basename(info.path).replace(/\.[^.]+$/, '') + '_rueckwaerts_' + key.slice(-6) + (hasV ? '.mp4' : '.wav'));
+  if (fs.existsSync(out)) return out;
+  const tmp = fs.mkdtempSync(path.join(outDir, '.rev-'));
+  try {
+    const seg = 5, total = end - start, parts = [];
+    for (let i = 0, a = start; a < end - 0.01; i++, a += seg) {
+      const len = Math.min(seg, end - a);
+      const f = path.join(tmp, 'p' + String(i).padStart(4, '0') + (hasV ? '.mp4' : '.wav'));
+      const args = ['-y', '-hide_banner', '-ss', String(a), '-t', String(len), '-i', info.path];
+      if (hasV) args.push('-vf', 'reverse', '-c:v', 'libx264', '-crf', '16', '-preset', 'veryfast', '-g', '12', '-pix_fmt', 'yuv420p');
+      else args.push('-vn');
+      if (info.hasAudio) args.push('-af', 'areverse', '-c:a', hasV ? 'aac' : 'pcm_s16le', '-ar', '48000', '-ac', '2');
+      else args.push('-an');
+      args.push(f);
+      const r = await run(args, { onSpawn });
+      if (r.code !== 0) throw new Error('reverse failed: ' + r.stderr.slice(-300));
+      parts.push(f);
+      if (onProgress) onProgress(Math.min(0.95, (a + len - start) / total));
+    }
+    parts.reverse();
+    fs.writeFileSync(path.join(tmp, 'list.txt'), parts.map(f => "file '" + path.basename(f) + "'").join('\n'));
+    const r = await run(['-y', '-hide_banner', '-f', 'concat', '-safe', '0', '-i', 'list.txt', '-c', 'copy', out], { cwd: tmp, onSpawn });
+    if (r.code !== 0) throw new Error('concat failed: ' + r.stderr.slice(-300));
+    return out;
+  } finally { try { fs.rmSync(tmp, { recursive: true, force: true }); } catch (e) { /* */ } }
+}
+async function stabilizeMedia(info, start, end, outDir, onProgress, onSpawn) {
+  const key = cacheKey(info.path) + '_' + Math.round(start * 1000) + '_' + Math.round(end * 1000);
+  const out = path.join(outDir, path.basename(info.path).replace(/\.[^.]+$/, '') + '_stabil_' + key.slice(-6) + '.mp4');
+  if (fs.existsSync(out)) return out;
+  const args = ['-y', '-hide_banner', '-ss', String(start), '-t', String(end - start), '-i', info.path,
+    '-vf', 'deshake=rx=48:ry=48:edge=mirror', '-c:v', 'libx264', '-crf', '16', '-preset', 'veryfast', '-pix_fmt', 'yuv420p'];
+  if (info.hasAudio) args.push('-c:a', 'aac', '-b:a', '256k'); else args.push('-an');
+  args.push('-progress', 'pipe:1', '-nostats', out + '.part.mp4');
+  const r = await run(args, { collect: false, onSpawn, onStdout: progressParser(end - start, onProgress) });
+  if (r.code !== 0) throw new Error('stabilize failed: ' + r.stderr.slice(-300));
+  fs.renameSync(out + '.part.mp4', out);
+  return out;
+}
+async function freezeFrame(file, t, outDir) {
+  const out = path.join(outDir, path.basename(file).replace(/\.[^.]+$/, '') + '_standbild_' + Math.round(t * 1000) + '.png');
+  if (fs.existsSync(out)) return out;
+  const r = await run(['-y', '-hide_banner', '-ss', String(Math.max(0, t)), '-i', file, '-frames:v', '1', out]);
+  if (r.code !== 0 || !fs.existsSync(out)) throw new Error('freeze failed: ' + r.stderr.slice(-300));
+  return out;
+}
+
+/* ---------------- audio pre-render (denoise, declick, de-esser, pitch) ---------------- */
+async function renderAudio(job, outDir, onProgress, onSpawn) {
+  const out = path.join(outDir, 'afx_' + job.key + '.wav');
+  if (fs.existsSync(out) && fs.statSync(out).size > 44) return out;
+  const chain = ['aresample=48000', 'aformat=channel_layouts=stereo'].concat(job.chain).concat(['aresample=48000']);
+  const r = await run(['-y', '-hide_banner', '-ss', String(job.start), '-t', String(job.end - job.start), '-i', job.path, '-vn',
+    '-af', chain.join(','), '-c:a', 'pcm_s16le', '-progress', 'pipe:1', '-nostats', out + '.part.wav'],
+  { collect: false, onSpawn, onStdout: progressParser(job.end - job.start, onProgress) });
+  if (r.code !== 0) throw new Error('audio render failed: ' + r.stderr.slice(-300));
+  fs.renameSync(out + '.part.wav', out);
+  return out;
+}
+
+/* ---------------- audio analysis ---------------- */
+async function audioLevels(file, start, dur) {
+  const args = ['-hide_banner', '-nostats'];
+  if (start > 0) args.push('-ss', String(start));
+  args.push('-i', file);
+  if (dur > 0) args.push('-t', String(dur));
+  args.push('-vn', '-af', 'volumedetect', '-f', 'null', '-');
+  const { stderr } = await run(args);
+  const mean = /mean_volume:\s*(-?[\d.]+|-inf)/.exec(stderr), max = /max_volume:\s*(-?[\d.]+|-inf)/.exec(stderr);
+  return { mean: mean && mean[1] !== '-inf' ? parseFloat(mean[1]) : null, max: max && max[1] !== '-inf' ? parseFloat(max[1]) : null };
+}
+async function detectSilence(file, start, dur, thresholdDb, minDur) {
+  const args = ['-hide_banner', '-nostats', '-ss', String(Math.max(0, start)), '-i', file, '-t', String(dur), '-vn',
+    '-af', `silencedetect=noise=${thresholdDb}dB:d=${minDur}`, '-f', 'null', '-'];
+  const { stderr } = await run(args);
+  const res = []; let cur = null;
+  for (const l of stderr.split(/\r?\n/)) {
+    const a = /silence_start:\s*(-?[\d.]+)/.exec(l), b = /silence_end:\s*(-?[\d.]+)/.exec(l);
+    if (a) cur = Math.max(0, parseFloat(a[1]));
+    if (b && cur != null) { res.push([cur, parseFloat(b[1])]); cur = null; }
+  }
+  if (cur != null) res.push([cur, dur]);
+  return res; // relative to start
+}
+
+/* ---------------- recording conversion ---------------- */
+async function toWav(src, out) {
+  const r = await run(['-y', '-hide_banner', '-i', src, '-vn', '-ar', '48000', '-ac', '2', '-c:a', 'pcm_s16le', out]);
+  if (r.code !== 0) throw new Error('convert failed: ' + r.stderr.slice(-300));
+  return out;
+}
+
+module.exports = {
+  reverseMedia, stabilizeMedia, freezeFrame, renderAudio, audioLevels, detectSilence, toWav, ffmpegPath, run, probe, needsProxy, makeProxy, filmstrip, poster, waveform, measureLoudness, encoders, cacheKey };

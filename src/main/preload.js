@@ -42,6 +42,17 @@ contextBridge.exposeInMainWorld('api', {
   clearCache: inv('cache:clear'),
   cacheSize: inv('cache:size'),
 
+  reverseMedia: inv('media:reverse'),
+  stabilizeMedia: inv('media:stabilize'),
+  freezeFrame: inv('media:freeze'),
+  renderAudio: inv('audio:render'),
+  audioLevels: inv('audio:levels'),
+  detectSilence: inv('audio:silence'),
+  cancelJob: inv('job:cancel'),
+  onJobProgress: on('job:progress'),
+  micAccess: inv('mic:access'),
+  saveRecording: inv('rec:save'),
+
   encoders: inv('export:encoders'),
   exportStart: inv('export:start'),
   exportCancel: inv('export:cancel'),

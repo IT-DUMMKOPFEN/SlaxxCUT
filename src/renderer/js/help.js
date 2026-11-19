@@ -57,6 +57,7 @@
       ['edit', 'Schneiden & Trimmen', `
         <h3>Clips bearbeiten</h3>
         <ul>
+          <li><b>Lautstärke-Hüllkurve, Rauschprofil &amp; Aufnahme:</b> siehe „Audio-Modus“.</li>
           <li><b>Verschieben:</b> Clip ziehen – auch auf eine andere Spur. Liegt dort schon etwas, wird es überschrieben.</li>
           <li><b>Kürzen (Trimmen):</b> linken oder rechten Rand des Clips ziehen.</li>
           <li><b>Schneiden:</b> <kbd>S</kbd> schneidet die ausgewählten Clips an der Abspielposition. Mit dem <b>Klingen-Werkzeug</b> (<kbd>C</kbd>) schneidest du per Klick genau an der Mausposition.</li>
@@ -69,41 +70,54 @@
         <p>Fahre mit der Maus über einen Clip: Oben links und oben rechts erscheinen kleine weiße Punkte. <b>Ziehe sie nach innen</b>, um den Clip am Anfang ein- bzw. am Ende auszublenden. Das funktioniert für Video, Bild, Text <b>und</b> Ton. Die genaue Dauer kannst du auch in den Eigenschaften einstellen.</p>`],
       ['fx', 'Effekte', `
         <h3>Effekte anwenden</h3>
-        <p>Ziehe einen Effekt aus dem Reiter <b>Effekte</b> auf einen Clip in der Timeline (oder Clip auswählen und den Effekt anklicken). Die Einstellungen öffnen sich links in den Eigenschaften. Mehrere Effekte werden in der angezeigten Reihenfolge angewendet.</p>
+        <p>Ziehe einen Effekt aus dem Reiter <b>Effekte</b> auf einen Clip (oder Clip auswählen und Effekt anklicken). Oben im Reiter kannst du Effekte <b>suchen</b>. Die Einstellungen öffnen sich links in den Eigenschaften; mehrere Effekte wirken in der angezeigten Reihenfolge.</p>
         <table>
-          <tr><td><b>Bewegung</b></td><td>Zoom In/Out, Pan &amp; Scan, Kamerawackeln, Parallax, Zeitlupe, Zeitraffer</td></tr>
-          <tr><td><b>Farbe</b></td><td>Schwarz-Weiß, Sepia, Vintage, Film Look, Color Grading (inkl. LUT-Datei .cube), Duotone, HDR-Look</td></tr>
-          <tr><td><b>Ton</b></td><td>Ton trennen, Lauter, Leiser, Lautstärke angleichen, Einheitliche Lautstärke</td></tr>
-          <tr><td><b>Text</b></td><td>Text einblenden – in eine Spur ziehen</td></tr>
+          <tr><td><b>Bewegung</b></td><td>Zoom In/Out, Pan &amp; Scan, Kamerawackeln, Parallax, Wackel-Zoom im Takt, Sanftes Drehen, Zeitlupe, Zeitraffer, Rückwärts, Standbild, Verwackeln reduzieren</td></tr>
+          <tr><td><b>Farbe &amp; Look</b></td><td>Schwarz-Weiß, Sepia, Vintage, Film Look, Color Grading (+ LUT), Duotone, HDR, Negativ, Farbton, Comic/Poster, VHS, Leuchten, Vignette</td></tr>
+          <tr><td><b>Bild</b></td><td>Weichzeichner, Schärfen, Spiegeln, Drehen 90°/180°, Zuschneiden, Verpixeln (auch nur ein Bereich), Greenscreen, Bild-im-Bild</td></tr>
+          <tr><td><b>Ton</b></td><td>Filter, Equalizer, Brummen/Rauschen/Klicks entfernen, De-Esser, Kompressor, Limiter, Hall, Echo, Tonhöhe, Kanäle, Normalisieren, Stille entfernen – siehe „Audio-Modus“</td></tr>
         </table>
-        <p><b>Parallax-Tipp:</b> Lege den Hintergrund auf eine untere Spur und ein freigestelltes Bild (PNG mit Transparenz) auf eine Spur darüber. Gib beiden den Parallax-Effekt mit unterschiedlicher Tiefe – der Vordergrund mit mehr Tiefe bewegt sich schneller.</p>`],
+        <h4>Greenscreen</h4><p>Lege das Greenscreen-Video auf eine <b>obere</b> Spur und den neuen Hintergrund auf eine Spur darunter. Gib dem Greenscreen-Clip den Effekt <b>Greenscreen</b>; mit „Toleranz“ und „Weiche Kante“ stellst du den Übergang ein.</p>
+        <h4>Verpixeln eines Bereichs</h4><p>Beim Effekt <b>Verpixeln</b> „Nur Bereich“ anhaken und Position/Größe einstellen. Mit Keyframes kannst du das Objekt sogar verfolgen.</p>
+        <p><b>Rückwärts</b> und <b>Verwackeln reduzieren</b> werden einmal berechnet (Fortschrittsbalken). Die berechnete Datei landet in <code>Dokumente/SlaxxCUT/Berechnet</code>.</p>`],
       ['trans', 'Übergänge', `
         <h3>Übergänge</h3>
-        <p>Ziehe einen Übergang auf den <b>Schnitt zwischen zwei Clips</b> (ein blauer Balken zeigt die Stelle) – oder auf den Anfang bzw. das Ende eines einzelnen Clips. Ein kleines Symbol am Clip zeigt den Übergang. Klick darauf öffnet die Einstellungen (Dauer), Rechtsklick entfernt ihn.</p>
-        <p>Verfügbar: Ein-/Ausblenden (über Schwarz), Überblendung, Wischen, Zoom, Drehen, Glitch und Whip Pan. Übergänge wirken auf Bild <b>und</b> Ton.</p>`],
-      ['text', 'Text', `
-        <h3>Text einblenden</h3>
-        <p>Ziehe <b>Text einblenden</b> (Reiter Effekte) in eine Spur – am besten über dem Video. In den Eigenschaften gibst du den Text ein und wählst Schrift, Größe, Farbe, Fett/Kursiv, Ausrichtung, Schatten (Richtung, Weichheit, Farbe), Kontur und eine Hintergrund-Box.</p>
-        <p>Die Position wählst du über das 9-Punkte-Raster – oder du <b>ziehst den Text direkt in der Schnitt-Vorschau</b> mit der Maus an die gewünschte Stelle.</p>`],
-      ['audio', 'Ton', `
-        <h3>Ton bearbeiten</h3>
+        <p>Ziehe einen Übergang auf den <b>Schnitt zwischen zwei Clips</b> (ein blauer Balken zeigt die Stelle) – oder auf den Anfang/das Ende eines einzelnen Clips. Ein kleines Symbol am Clip zeigt den Übergang: Klick öffnet die Einstellungen, Rechtsklick entfernt ihn.</p>
+        <p>In den Eigenschaften wählst du die <b>Richtung</b> (z. B. Wischen nach links/rechts/oben/unten/diagonal, Kreis öffnen/schließen, Drehen im/gegen den Uhrzeigersinn) und die <b>Dauer</b>.</p>
+        <p>Verfügbar: Ein-/Ausblenden (Schwarz), Blitz (Weiß), Überblendung, Wischen, Hereingleiten, Schieben, Kreis, Jalousie, Zoom (hinein/heraus), Drehen, Whip Pan, Glitch, Pixel, Unschärfe. Übergänge wirken auf Bild <b>und</b> Ton.</p>`],
+      ['text', 'Text & Vorlagen', `
+        <h3>Text und Vorlagen</h3>
+        <p>Im Reiter Effekte unter <b>Texteffekte</b> findest du fertige Vorlagen: <b>Freier Text, Bauchbinde, Info-Leiste, Titel-Box, Ecken-Badge, Laufschrift</b> und <b>Abspann</b>. Einfach in eine Spur über dem Video ziehen.</p>
+        <p>In den Eigenschaften stellst du Text, zweite Zeile, Schrift, Größe, Farben, Ausrichtung, Schatten und Kontur ein. Beim <b>Hintergrund</b> wählst du <b>Farbe</b>, <b>Verlauf</b> oder ein <b>eigenes Bild</b> (z. B. ein PNG mit deinem Design), dazu Deckkraft, runde Ecken, Innenabstand und einen Akzentstreifen.</p>
+        <p><b>Animation</b>: Einblenden, von links/rechts/unten hereingleiten oder aufpoppen – getrennt für Anfang und Ende.</p>
+        <p>Mit <b>„Als Vorlage speichern“</b> wird dein Design zur eigenen Vorlage (mit Stern im Reiter Effekte, Rechtsklick löscht sie).</p>
+        <p>Beim <b>Abspann</b> wird jede Zeile, die mit <code>#</code> beginnt, zur Überschrift. Die Laufschrift-Geschwindigkeit stellst du unter „Tempo“ ein. Text kannst du direkt in der Schnitt-Vorschau mit der Maus verschieben.</p>`],
+      ['audio', 'Audio-Modus', `
+        <h3>Audio-Modus – SlaxxCUT als Sound-Editor</h3>
+        <p>Oben rechts zwischen <b>Video</b> und <b>Audio</b> umschalten (oder <kbd>Tab</kbd>). Im Audio-Modus zeigt SlaxxCUT statt der Vorschauen einen großen <b>Audio-Editor</b>, die Spuren werden höher und der Reiter Effekte zeigt nur Ton-Effekte.</p>
+        <h4>Bearbeiten</h4>
         <ul>
-          <li><b>Ton trennen:</b> legt den Ton eines Videos als eigenen Audio-Clip auf eine freie Spur – so kannst du ihn unabhängig schneiden.</li>
-          <li><b>Lauter / Leiser:</b> ±3 dB pro Klick. Genaue Werte in den Eigenschaften.</li>
-          <li><b>Lautstärke angleichen:</b> misst die Lautheit der ausgewählten Clips (oder aller) und gleicht sie an (−16 LUFS).</li>
-          <li><b>Einheitliche Lautstärke:</b> gleicht leise und laute Stellen innerhalb eines Clips aus.</li>
-          <li>Beim Export kannst du die Gesamt-Lautheit für YouTube &amp; Co. normalisieren (−14 LUFS).</li>
-        </ul>`],
-      ['export', 'Export', `
-        <h3>Video exportieren</h3>
-        <p>Klicke auf <b>Export</b> (<kbd>${mod}</kbd>+<kbd>E</kbd>). Wähle:</p>
-        <ul>
-          <li><b>Format:</b> 16:9 (YouTube), 9:16 (TikTok/Shorts/Reels) oder 1:1</li>
-          <li><b>Größe:</b> 4K, 2K, 1080p, 720p, 480p, 360p</li>
-          <li><b>Qualität:</b> Niedrig bis Maximal (beeinflusst die Dateigröße)</li>
-          <li><b>Encoder:</b> „Automatisch“ nutzt die Grafikkarte (schnell), falls verfügbar. „Software x264“ liefert die beste Qualität.</li>
+          <li>Clip in der Timeline auswählen – die Wellenform erscheint groß.</li>
+          <li>Mit der Maus über die Wellenform ziehen = <b>Bereich markieren</b>.</li>
+          <li>Werkzeuge für die Auswahl: abspielen (auch in Schleife), ausschneiden, kopieren, löschen, stumm, ein-/ausblenden, lauter/leiser, normalisieren, rückwärts, beliebigen Ton-Effekt anwenden.</li>
+          <li><b>Gelbe Linie = Lautstärke-Hüllkurve</b>: auf die Linie klicken setzt einen Punkt, Punkte ziehen, Rechtsklick löscht.</li>
+          <li><b>Solo</b>: nur diesen Clip hören. <b>Pegelanzeige</b> oben rechts.</li>
         </ul>
-        <p>Das Ergebnis ist immer eine MP4-Datei (H.264 + AAC), die überall abspielbar ist.</p>`],
+        <h4>Rauschen entfernen</h4>
+        <p>Markiere ein Stück, in dem <b>nur Rauschen</b> zu hören ist, und klicke <b>Rauschprofil</b>. Danach den Effekt „Rauschen entfernen“ mit Modus „Rauschprofil“ verwenden. Oder einfach Modus „Automatisch“.</p>
+        <h4>Brummen, Filter &amp; Co.</h4>
+        <p>Brummen entfernen (50/60 Hz), Hochpass/Tiefpass/Bandpass, Equalizer mit 3 oder 10 Bändern, Kompressor, Limiter, Hall, Echo, Tonhöhe, Mono, Kanäle tauschen, Balance, De-Esser, Klicks entfernen, Stille entfernen, Normalisieren und Lautstärke angleichen. Die meisten hörst du sofort; Rauschen/Klicks/De-Esser/Tonhöhe werden kurz berechnet.</p>
+        <h4>Aufnahme</h4>
+        <p>Mikrofon wählen, roten Knopf drücken – die Aufnahme landet an der Abspielposition in der ausgewählten Spur. Mit „mitspielen“ läuft die Timeline dabei, ideal für Kommentare. Aufnahmen werden in <code>Dokumente/SlaxxCUT/Aufnahmen</code> gespeichert.</p>`],
+      ['export', 'Export', `
+        <h3>Exportieren</h3>
+        <p>Klicke auf <b>Export</b> (<kbd>${mod}</kbd>+<kbd>E</kbd>). Oben wählst du:</p>
+        <ul>
+          <li><b>Video</b>: MP4 oder MOV (H.264 klein, oder ProRes 422 für Profi-Schnitt), 16:9 / 9:16 / 1:1, 4K bis 360p, Qualität, Bilder/Sekunde, Encoder (Grafikkarte)</li>
+          <li><b>Nur Ton</b>: WAV (16/24 Bit), MP3 (128–320 kbit/s), FLAC, OGG oder M4A, 44,1 oder 48 kHz</li>
+          <li><b>Einzelbild</b>: PNG in voller Qualität an der Abspielposition (auch über das Bild-Symbol in der Schnitt-Vorschau)</li>
+        </ul>
+        <p><b>Bereich</b>: alles, nur die ausgewählten Clips oder vom ersten bis zum letzten Marker. Optional wird die Lautheit für YouTube &amp; Co. normalisiert.</p>`],
       ['keys', 'Tastenkürzel', `
         <h3>Tastenkürzel</h3>
         <table>
@@ -121,12 +135,25 @@
           <tr><td><kbd>${mod}</kbd>+<kbd>A</kbd></td><td>Alle Clips auswählen</td></tr>
           <tr><td><kbd>+</kbd> / <kbd>−</kbd> / <kbd>Umschalt</kbd>+<kbd>Z</kbd></td><td>Timeline zoomen / alles zeigen</td></tr>
           <tr><td><kbd>${mod}</kbd>+<kbd>N</kbd> / <kbd>O</kbd> / <kbd>S</kbd> / <kbd>E</kbd></td><td>Neu / Laden / Speichern / Export</td></tr>
+          <tr><td><kbd>M</kbd> / <kbd>Alt</kbd>+<kbd>←</kbd><kbd>→</kbd></td><td>Marker setzen / zum Marker springen</td></tr>
+          <tr><td><kbd>Tab</kbd></td><td>Video- / Audio-Modus</td></tr>
           <tr><td><kbd>F1</kbd></td><td>Hilfe</td></tr>
         </table>`],
       ['project', 'Projekte & Sicherung', `
         <h3>Projekte</h3>
         <p>Ein Projekt wird als <code>.slaxxcut</code>-Datei gespeichert. Sie enthält die Timeline und die <b>Pfade</b> zu deinen Mediendateien (nicht die Dateien selbst). Verschiebe deine Videos daher nicht – oder verknüpfe sie danach per Rechtsklick neu.</p>
         <p>SlaxxCUT sichert dein Projekt jede Minute automatisch. Nach einem Absturz wird dir beim nächsten Start die Wiederherstellung angeboten.</p>`],
+      ['keyframes', 'Keyframes', `
+        <h3>Keyframes – Animation über die Zeit</h3>
+        <p>Größe, Position X/Y, Drehung, Deckkraft und Lautstärke lassen sich animieren:</p>
+        <ol>
+          <li>Abspielposition auf den Startpunkt setzen, Wert einstellen, auf <b>◆</b> klicken.</li>
+          <li>Abspielposition weiter setzen und den Wert ändern – ein neuer Keyframe entsteht automatisch.</li>
+        </ol>
+        <p>◀ ▶ springen zum vorherigen/nächsten Keyframe; ◆ an einem Keyframe entfernt ihn; Rechtsklick auf ◆ löscht alle. Keyframes erscheinen als gelbe Rauten am Clip.</p>`],
+      ['markers', 'Marker', `
+        <h3>Marker</h3>
+        <p><kbd>M</kbd> oder der Marker-Knopf setzt einen Marker an der Abspielposition. Marker erscheinen im Zeitlineal; Klick springt hin, Doppelklick benennt/färbt, Rechtsklick löscht. <kbd>Alt</kbd>+<kbd>←</kbd>/<kbd>→</kbd> springt zum vorherigen/nächsten Marker. Clips rasten an Markern ein, und beim Export kannst du „Erster bis letzter Marker“ als Bereich wählen.</p>`],
       ['faq', 'Probleme & Tipps', `
         <h3>Häufige Fragen</h3>
         <h4>macOS: „SlaxxCUT ist beschädigt“ oder „kann nicht geöffnet werden“</h4>
@@ -201,41 +228,54 @@
         <p>Hover over a clip: small white dots appear at the top left and top right. <b>Drag them inwards</b> to fade the clip in at the start or out at the end. This works for video, pictures, text <b>and</b> audio. You can also set the exact duration in the properties.</p>`],
       ['fx', 'Effects', `
         <h3>Applying effects</h3>
-        <p>Drag an effect from the <b>Effects</b> tab onto a clip in the timeline (or select a clip and click the effect). Its settings open on the left in the properties. Several effects are applied in the order shown.</p>
+        <p>Drag an effect from the <b>Effects</b> tab onto a clip (or select a clip and click the effect). You can <b>search</b> at the top of the tab. Settings open on the left in the properties; several effects work in the order shown.</p>
         <table>
-          <tr><td><b>Motion</b></td><td>Zoom in/out, Pan &amp; Scan, camera shake, parallax, slow motion, timelapse</td></tr>
-          <tr><td><b>Color</b></td><td>Black &amp; white, sepia, vintage, film look, color grading (incl. .cube LUT file), duotone, HDR look</td></tr>
-          <tr><td><b>Audio</b></td><td>Detach audio, louder, quieter, match volume, even loudness</td></tr>
-          <tr><td><b>Text</b></td><td>Text overlay – drag it into a track</td></tr>
+          <tr><td><b>Motion</b></td><td>Zoom in/out, Pan &amp; Scan, camera shake, parallax, beat zoom, slow spin, slow motion, timelapse, reverse, freeze frame, reduce shake</td></tr>
+          <tr><td><b>Color &amp; look</b></td><td>Black &amp; white, sepia, vintage, film look, color grading (+ LUT), duotone, HDR, negative, hue, comic/poster, VHS, glow, vignette</td></tr>
+          <tr><td><b>Picture</b></td><td>Blur, sharpen, mirror, rotate 90°/180°, crop, pixelate (also just an area), green screen, picture in picture</td></tr>
+          <tr><td><b>Audio</b></td><td>Filters, equalizer, remove hum/noise/clicks, de-esser, compressor, limiter, reverb, echo, pitch, channels, normalize, remove silence – see “Audio mode”</td></tr>
         </table>
-        <p><b>Parallax tip:</b> put the background on a lower track and a cut-out picture (PNG with transparency) on a track above. Give both the parallax effect with different depths – the foreground with more depth moves faster.</p>`],
+        <h4>Green screen</h4><p>Put the green screen video on an <b>upper</b> track and the new background on a track below. Give the green screen clip the <b>Green screen</b> effect; use “Tolerance” and “Soft edge” to tune it.</p>
+        <h4>Pixelating an area</h4><p>In the <b>Pixelate</b> effect tick “Area only” and set position/size. With keyframes you can even follow the object.</p>
+        <p><b>Reverse</b> and <b>Reduce shake</b> are rendered once (progress bar). The rendered file is stored in <code>Documents/SlaxxCUT/Berechnet</code>.</p>`],
       ['trans', 'Transitions', `
         <h3>Transitions</h3>
-        <p>Drag a transition onto the <b>cut between two clips</b> (a blue bar shows the spot) – or onto the start or end of a single clip. A small icon on the clip shows the transition. Click it to open its settings (duration), right-click to remove it.</p>
-        <p>Available: fade in/out (through black), crossfade, wipe, zoom, spin, glitch and whip pan. Transitions affect picture <b>and</b> sound.</p>`],
-      ['text', 'Text', `
-        <h3>Text overlay</h3>
-        <p>Drag <b>Text overlay</b> (Effects tab) into a track – ideally above the video. In the properties you type the text and choose font, size, color, bold/italic, alignment, shadow (direction, softness, color), outline and a background box.</p>
-        <p>Choose the position with the 9-dot grid – or <b>drag the text directly in the edit preview</b> with the mouse.</p>`],
-      ['audio', 'Audio', `
-        <h3>Editing audio</h3>
+        <p>Drag a transition onto the <b>cut between two clips</b> (a blue bar shows the spot) – or onto the start/end of a single clip. A small icon on the clip shows the transition: click opens its settings, right-click removes it.</p>
+        <p>In the properties you choose the <b>direction</b> (e.g. wipe left/right/up/down/diagonal, circle open/close, spin clockwise/counter-clockwise) and the <b>duration</b>.</p>
+        <p>Available: fade (black), flash (white), crossfade, wipe, slide in, push, circle, blinds, zoom (in/out), spin, whip pan, glitch, pixels, blur. Transitions affect picture <b>and</b> sound.</p>`],
+      ['text', 'Text & templates', `
+        <h3>Text and templates</h3>
+        <p>In the Effects tab under <b>Text effects</b> you find ready-made templates: <b>free text, lower third, info bar, title box, corner badge, news ticker</b> and <b>credits</b>. Just drag one onto a track above the video.</p>
+        <p>In the properties you set text, second line, font, size, colors, alignment, shadow and outline. For the <b>background</b> choose a <b>color</b>, a <b>gradient</b> or your <b>own picture</b> (e.g. a PNG with your design), plus opacity, rounded corners, padding and an accent stripe.</p>
+        <p><b>Animation</b>: fade, slide in from left/right/below or pop – separately for start and end.</p>
+        <p><b>“Save as template”</b> turns your design into your own template (with a star in the Effects tab, right-click deletes it).</p>
+        <p>In <b>credits</b> every line starting with <code>#</code> becomes a heading. Set the ticker speed under “Speed”. You can drag text directly in the edit preview.</p>`],
+      ['audio', 'Audio mode', `
+        <h3>Audio mode – SlaxxCUT as a sound editor</h3>
+        <p>Switch between <b>Video</b> and <b>Audio</b> at the top right (or <kbd>Tab</kbd>). In audio mode SlaxxCUT shows a big <b>audio editor</b> instead of the previews, tracks become taller and the Effects tab only lists audio effects.</p>
+        <h4>Editing</h4>
         <ul>
-          <li><b>Detach audio:</b> puts the sound of a video on a free track as its own audio clip – so you can cut it independently.</li>
-          <li><b>Louder / quieter:</b> ±3 dB per click. Exact values in the properties.</li>
-          <li><b>Match volume:</b> measures the loudness of the selected clips (or all) and matches them (−16 LUFS).</li>
-          <li><b>Even loudness:</b> evens out quiet and loud parts within a clip.</li>
-          <li>When exporting you can normalize the overall loudness for YouTube &amp; co. (−14 LUFS).</li>
-        </ul>`],
-      ['export', 'Export', `
-        <h3>Exporting a video</h3>
-        <p>Click <b>Export</b> (<kbd>${modEn}</kbd>+<kbd>E</kbd>) and choose:</p>
-        <ul>
-          <li><b>Format:</b> 16:9 (YouTube), 9:16 (TikTok/Shorts/Reels) or 1:1</li>
-          <li><b>Size:</b> 4K, 2K, 1080p, 720p, 480p, 360p</li>
-          <li><b>Quality:</b> low to maximum (affects the file size)</li>
-          <li><b>Encoder:</b> “Automatic” uses the graphics card (fast) if available. “Software x264” gives the best quality.</li>
+          <li>Select a clip in the timeline – its waveform appears large.</li>
+          <li>Drag across the waveform = <b>select a range</b>.</li>
+          <li>Tools for the selection: play (also looped), cut, copy, delete, silence, fade in/out, louder/quieter, normalize, reverse, apply any audio effect.</li>
+          <li><b>Yellow line = volume envelope</b>: click the line to add a point, drag points, right-click deletes.</li>
+          <li><b>Solo</b>: hear only this clip. <b>Level meter</b> at the top right.</li>
         </ul>
-        <p>The result is always an MP4 file (H.264 + AAC) that plays everywhere.</p>`],
+        <h4>Removing noise</h4>
+        <p>Select a part where you hear <b>only noise</b> and click <b>Noise profile</b>. Then use the “Remove noise” effect in “Noise profile” mode. Or simply use “Automatic” mode.</p>
+        <h4>Hum, filters &amp; more</h4>
+        <p>Remove hum (50/60 Hz), high-/low-/band-pass, 3- or 10-band equalizer, compressor, limiter, reverb, echo, pitch, mono, swap channels, balance, de-esser, remove clicks, remove silence, normalize and match volume. Most are heard instantly; noise/clicks/de-esser/pitch are rendered briefly.</p>
+        <h4>Recording</h4>
+        <p>Choose a microphone and press the red button – the recording is placed at the playhead on the selected track. With “play along” the timeline runs while you record, ideal for voice-overs. Recordings are saved in <code>Documents/SlaxxCUT/Aufnahmen</code>.</p>`],
+      ['export', 'Export', `
+        <h3>Exporting</h3>
+        <p>Click <b>Export</b> (<kbd>${modEn}</kbd>+<kbd>E</kbd>). At the top choose:</p>
+        <ul>
+          <li><b>Video</b>: MP4 or MOV (H.264 small, or ProRes 422 for pro editing), 16:9 / 9:16 / 1:1, 4K to 360p, quality, frames/second, encoder (graphics card)</li>
+          <li><b>Audio only</b>: WAV (16/24 bit), MP3 (128–320 kbit/s), FLAC, OGG or M4A, 44.1 or 48 kHz</li>
+          <li><b>Still frame</b>: full-quality PNG at the playhead (also via the picture icon in the edit preview)</li>
+        </ul>
+        <p><b>Range</b>: everything, only the selected clips or from the first to the last marker. Optionally the loudness is normalized for YouTube &amp; co.</p>`],
       ['keys', 'Keyboard shortcuts', `
         <h3>Keyboard shortcuts</h3>
         <table>
@@ -253,12 +293,25 @@
           <tr><td><kbd>${modEn}</kbd>+<kbd>A</kbd></td><td>Select all clips</td></tr>
           <tr><td><kbd>+</kbd> / <kbd>−</kbd> / <kbd>Shift</kbd>+<kbd>Z</kbd></td><td>Zoom timeline / show all</td></tr>
           <tr><td><kbd>${modEn}</kbd>+<kbd>N</kbd> / <kbd>O</kbd> / <kbd>S</kbd> / <kbd>E</kbd></td><td>New / load / save / export</td></tr>
+          <tr><td><kbd>M</kbd> / <kbd>Alt</kbd>+<kbd>←</kbd><kbd>→</kbd></td><td>Set marker / jump to marker</td></tr>
+          <tr><td><kbd>Tab</kbd></td><td>Video / audio mode</td></tr>
           <tr><td><kbd>F1</kbd></td><td>Help</td></tr>
         </table>`],
       ['project', 'Projects & backup', `
         <h3>Projects</h3>
         <p>A project is saved as a <code>.slaxxcut</code> file. It contains the timeline and the <b>paths</b> to your media files (not the files themselves). So don't move your videos – or relink them afterwards via right-click.</p>
         <p>SlaxxCUT automatically backs up your project every minute. After a crash you'll be offered to restore it on the next start.</p>`],
+      ['keyframes', 'Keyframes', `
+        <h3>Keyframes – animation over time</h3>
+        <p>Size, position X/Y, rotation, opacity and volume can be animated:</p>
+        <ol>
+          <li>Set the playhead to the start, adjust the value, click <b>◆</b>.</li>
+          <li>Move the playhead and change the value – a new keyframe is created automatically.</li>
+        </ol>
+        <p>◀ ▶ jump to the previous/next keyframe; ◆ on a keyframe removes it; right-click on ◆ deletes all. Keyframes appear as yellow diamonds on the clip.</p>`],
+      ['markers', 'Markers', `
+        <h3>Markers</h3>
+        <p><kbd>M</kbd> or the marker button sets a marker at the playhead. Markers appear in the time ruler; click jumps there, double-click renames/colors, right-click deletes. <kbd>Alt</kbd>+<kbd>←</kbd>/<kbd>→</kbd> jumps to the previous/next marker. Clips snap to markers, and when exporting you can choose “first to last marker” as range.</p>`],
       ['faq', 'Problems & tips', `
         <h3>Frequently asked questions</h3>
         <h4>macOS: “SlaxxCUT is damaged” or “can't be opened”</h4>
