@@ -104,6 +104,7 @@ jobs:
         with:
           name: SlaxxCUT-${{ matrix.name }}
           path: out/*
+          retention-days: 7
 
   release:
     needs: build
