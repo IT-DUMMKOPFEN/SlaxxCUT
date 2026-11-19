@@ -154,6 +154,7 @@
     /* ---------------- main loop ---------------- */
     frame() {
       this.raf = requestAnimationFrame(this.loopFn);
+      if (this.suspended) return;
       if (this.playing) {
         const d = core.projectDuration(S.project);
         let t = this.startT + (performance.now() - this.startWall) / 1000;
@@ -245,9 +246,15 @@
         } else if (Math.abs(el.currentTime - st) > 0.3 * Math.max(1, sp)) {
           el.currentTime = st;
         }
+        e.lastSeek = null;
       } else {
         if (!el.paused) el.pause();
-        if (Math.abs(el.currentTime - st) > 1 / 120 && !el.seeking) el.currentTime = st;
+        // seek only when the *requested* position changes – some decoders (Windows) report frame-snapped
+        // currentTime values, comparing against currentTime would cause an endless seek/render loop
+        if (!el.seeking && (e.lastSeek == null || Math.abs(st - e.lastSeek) > 1 / 240)) {
+          if (Math.abs(el.currentTime - st) > 1 / 240) el.currentTime = st;
+          e.lastSeek = st;
+        }
       }
     }
 

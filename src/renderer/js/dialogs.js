@@ -127,6 +127,7 @@
       });
       lastExportDir = st.path.replace(/[\\/][^\\/]*$/, '');
       SC.app.saveSettings({ lastExport: { short: st.short, quality: st.quality, encoder: st.encoder, normalize: st.normalize } });
+      SC.program.suspended = true; // keep the CPU free for FFmpeg
       try {
         const proj = JSON.parse(JSON.stringify(p));
         const res = await window.api.exportStart(proj, { path: st.path, short: st.short, aspect: st.aspect, fps: st.fps, quality: st.quality, encoder: st.encoder, normalize: st.normalize }, texts);
@@ -149,7 +150,7 @@
           validate();
           toast(t('export.failed') + ':\n' + msg.replace(/^Error invoking remote method[^:]*:\s*(Error:\s*)?/, '').slice(0, 600), 'error');
         }
-      } finally { off(); }
+      } finally { off(); SC.program.suspended = false; SC.program.needsRender = true; }
       cancelBtn.textContent = t('export.close');
     }
   }

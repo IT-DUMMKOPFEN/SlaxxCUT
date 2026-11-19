@@ -286,6 +286,7 @@ async function runSmoke(w, outFile) {
       const cv = SC.programMonitor.canvas; const gl = cv.getContext('webgl2');
       window.__smokeStep = 'export:' + JSON.stringify(await window.api.encoders());
       const px = new Uint8Array(4); gl.readPixels(Math.floor(cv.width / 2), Math.floor(cv.height / 2), 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px);
+      window.__smokeStep = 'export-start'; SC.program.suspended = true;
       const p = SC.store.S.project; const texts = {};
       for (const c of p.clips.filter(c => c.kind === 'text')) texts[c.id] = await SC.text.toDataURL(c, 640, 360);
       const res = await window.api.exportStart(JSON.parse(JSON.stringify(p)), { path: ${JSON.stringify(out)}, short: 360, aspect: '16:9', fps: 25, quality: 'low', encoder: 'auto' }, texts);
