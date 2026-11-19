@@ -11,6 +11,9 @@ const ROOT = path.join(__dirname, '..');
 const SCHEME = 'app';
 const HOST = 'slaxx';
 
+// allow software WebGL on PCs/VMs without a usable GPU (preview still works, just slower)
+app.commandLine.appendSwitch('enable-unsafe-swiftshader');
+
 protocol.registerSchemesAsPrivileged([{
   scheme: SCHEME,
   privileges: { standard: true, secure: true, supportFetchAPI: true, stream: true, corsEnabled: true, bypassCSP: false }
@@ -248,7 +251,11 @@ function setupIpc() {
 async function runSmoke(w, outFile) {
   const result = { ok: false, steps: [] };
   const finish = () => { try { fs.writeFileSync(outFile, JSON.stringify(result, null, 2)); } catch (e) { /* */ } forceClose = true; app.exit(result.ok ? 0 : 1); };
-  setTimeout(() => { result.error = 'timeout'; finish(); }, 240000);
+  setTimeout(async () => {
+    result.error = 'timeout';
+    try { result.lastStep = await w.webContents.executeJavaScript('window.__smokeStep'); } catch (e) { /* */ }
+    finish();
+  }, 240000);
   try {
     const dir = fs.mkdtempSync(path.join(require('os').tmpdir(), 'slaxx-smoke-'));
     const vid = path.join(dir, 'test.mp4');
@@ -259,9 +266,11 @@ async function runSmoke(w, outFile) {
       const wait = (ms) => new Promise(r => setTimeout(r, ms));
       for (let i = 0; i < 100 && !(window.SC && SC.timeline && SC.timeline.content); i++) await wait(100);
       const errs = []; window.addEventListener('error', e => errs.push(String(e.message)));
+      window.__smokeStep = 'import';
       const list = await SC.media.importFiles([${JSON.stringify(vid)}]);
       const m = list[0];
       for (let i = 0; i < 50 && SC.store.S.runtime[m.id].status !== 'ready'; i++) await wait(100);
+      window.__smokeStep = 'timeline:' + SC.store.S.runtime[m.id].status;
       SC.store.change('smoke', () => {
         const S = SC.store.S;
         const a = SC.edit.placeMedia(m, S.project.tracks[1].id, 0, 0, 2);
@@ -270,8 +279,10 @@ async function runSmoke(w, outFile) {
         SC.edit.applyTransition(b, 'in', 'crossfade');
         const t = SC.edit.makeText({ start: 0.5, out: 2, trackId: S.project.tracks[0].id }); S.project.clips.push(t);
       });
+      window.__smokeStep = 'render';
       SC.program.seek(1.0); await wait(1500);
       const cv = SC.programMonitor.canvas; const gl = cv.getContext('webgl2');
+      window.__smokeStep = 'export';
       const px = new Uint8Array(4); gl.readPixels(Math.floor(cv.width / 2), Math.floor(cv.height / 2), 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px);
       const p = SC.store.S.project; const texts = {};
       for (const c of p.clips.filter(c => c.kind === 'text')) texts[c.id] = await SC.text.toDataURL(c, 640, 360);

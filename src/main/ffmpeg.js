@@ -19,12 +19,14 @@ function ffmpegPath() {
 
 function run(args, opts = {}) {
   return new Promise((resolve, reject) => {
-    const proc = spawn(ffmpegPath(), args, { windowsHide: true, cwd: opts.cwd || undefined });
+    const proc = spawn(ffmpegPath(), ['-nostdin'].concat(args), { windowsHide: true, cwd: opts.cwd || undefined, stdio: ['ignore', 'pipe', 'pipe'] });
+    let timer = null;
+    if (opts.timeout) timer = setTimeout(() => { try { proc.kill('SIGKILL'); } catch (e) { /* */ } }, opts.timeout);
     const out = []; let err = '';
     proc.stdout.on('data', d => { if (opts.collect !== false) out.push(d); if (opts.onStdout) opts.onStdout(d); });
     proc.stderr.on('data', d => { err += d.toString(); if (err.length > 2e6) err = err.slice(-1e6); if (opts.onStderr) opts.onStderr(d.toString()); });
     proc.on('error', reject);
-    proc.on('close', code => resolve({ code, stdout: Buffer.concat(out), stderr: err }));
+    proc.on('close', code => { if (timer) clearTimeout(timer); resolve({ code, stdout: Buffer.concat(out), stderr: err }); });
     if (opts.onSpawn) opts.onSpawn(proc);
   });
 }
@@ -197,8 +199,10 @@ async function encoders() {
   // verify hardware encoders actually work on this machine
   for (const hw of ['h264_videotoolbox', 'h264_nvenc', 'h264_qsv', 'h264_amf']) {
     if (!list[hw]) continue;
-    const r = await run(['-hide_banner', '-f', 'lavfi', '-i', 'color=c=black:s=256x144:d=0.2', '-c:v', hw, '-f', 'null', '-']);
-    list[hw] = r.code === 0;
+    try {
+      const r = await run(['-hide_banner', '-f', 'lavfi', '-i', 'color=c=black:s=256x144:d=0.2', '-c:v', hw, '-f', 'null', '-'], { timeout: 8000 });
+      list[hw] = r.code === 0;
+    } catch (e) { list[hw] = false; }
   }
   encCache = list;
   return list;
