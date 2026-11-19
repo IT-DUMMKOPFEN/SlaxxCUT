@@ -1,0 +1,81 @@
+{
+  "name": "slaxxcut",
+  "productName": "SlaxxCUT",
+  "version": "1.0.0",
+  "description": "SlaxxCUT – modernes Videoschnittprogramm / modern video editor",
+  "main": "src/main/main.js",
+  "author": "IT-DUMMKOPFEN",
+  "license": "GPL-3.0-or-later",
+  "homepage": "https://github.com/IT-DUMMKOPFEN/SlaxxCUT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/IT-DUMMKOPFEN/SlaxxCUT.git"
+  },
+  "scripts": {
+    "start": "electron .",
+    "dist:mac": "electron-builder --mac dir --arm64",
+    "dist:win": "electron-builder --win nsis portable --x64",
+    "dist:linux": "electron-builder --linux AppImage --x64"
+  },
+  "dependencies": {
+    "ffmpeg-static": "^5.2.0"
+  },
+  "devDependencies": {
+    "electron": "^37.0.0",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "de.itdummkopfen.slaxxcut",
+    "productName": "SlaxxCUT",
+    "copyright": "Done by IT-DUMMKOPFEN",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "src/**/*",
+      "licenses/**/*",
+      "LICENSE",
+      "package.json",
+      "node_modules/ffmpeg-static/**/*"
+    ],
+    "asarUnpack": [
+      "node_modules/ffmpeg-static/**/*"
+    ],
+    "fileAssociations": [
+      {
+        "ext": "slaxxcut",
+        "name": "SlaxxCUT Projekt",
+        "role": "Editor"
+      }
+    ],
+    "mac": {
+      "category": "public.app-category.video",
+      "icon": "build/icon.png",
+      "identity": null,
+      "hardenedRuntime": false,
+      "gatekeeperAssess": false
+    },
+    "win": {
+      "icon": "build/icon.png",
+      "artifactName": "SlaxxCUT-${version}-Windows-${arch}-${target}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "artifactName": "SlaxxCUT-${version}-Windows-Setup.${ext}"
+    },
+    "portable": {
+      "artifactName": "SlaxxCUT-${version}-Windows-Portable.${ext}"
+    },
+    "linux": {
+      "icon": "build/icon.png",
+      "category": "AudioVideo",
+      "executableArgs": [
+        "--no-sandbox"
+      ],
+      "artifactName": "SlaxxCUT-${version}-Linux-${arch}.${ext}"
+    }
+  }
+}

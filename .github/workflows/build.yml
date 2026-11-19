@@ -1,0 +1,106 @@
+name: Build SlaxxCUT
+
+on:
+  push:
+    branches: [ main ]
+    tags: [ 'v*' ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-14
+            name: macOS-AppleSilicon
+          - os: windows-latest
+            name: Windows
+          - os: ubuntu-22.04
+            name: Linux-AppImage
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Check FFmpeg
+        shell: bash
+        run: node -e "const p=require('ffmpeg-static');console.log(p);require('child_process').execFileSync(p,['-hide_banner','-version'],{stdio:'inherit'})"
+
+      # ---------- macOS (Apple Silicon) ----------
+      - name: Build macOS app
+        if: runner.os == 'macOS'
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+        run: npx electron-builder --mac dir --arm64 --publish never
+
+      - name: Ad-hoc sign + DMG/ZIP (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          APP="dist/mac-arm64/SlaxxCUT.app"
+          FF=$(find "$APP" -path "*app.asar.unpacked*" -name ffmpeg -type f | head -1)
+          chmod +x "$FF"
+          codesign --force --sign - "$FF"
+          codesign --force --deep --sign - "$APP"
+          codesign --verify --deep --verbose=2 "$APP" || true
+          mkdir -p out dmgroot
+          cp -R "$APP" dmgroot/
+          ln -s /Applications dmgroot/Applications
+          hdiutil create -volname "SlaxxCUT" -srcfolder dmgroot -ov -format UDZO "out/SlaxxCUT-$VERSION-macOS-AppleSilicon.dmg"
+          ditto -c -k --keepParent "$APP" "out/SlaxxCUT-$VERSION-macOS-AppleSilicon.zip"
+
+      # ---------- Windows ----------
+      - name: Build Windows
+        if: runner.os == 'Windows'
+        run: npx electron-builder --win nsis portable --x64 --publish never
+
+      - name: Collect Windows files
+        if: runner.os == 'Windows'
+        shell: bash
+        run: mkdir -p out && cp dist/*.exe out/
+
+      # ---------- Linux ----------
+      - name: Build Linux AppImage
+        if: runner.os == 'Linux'
+        run: npx electron-builder --linux AppImage --x64 --publish never
+
+      - name: Collect Linux files
+        if: runner.os == 'Linux'
+        run: mkdir -p out && cp dist/*.AppImage out/ && chmod +x out/*.AppImage
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SlaxxCUT-${{ matrix.name }}
+          path: out/*
+
+  release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/*
+          name: SlaxxCUT ${{ github.ref_name }}
+          body: |
+            SlaxxCUT ${{ github.ref_name }} – Done by IT-DUMMKOPFEN
+
+            **macOS (Apple Silicon):** DMG öffnen, SlaxxCUT in „Programme“ ziehen. Beim ersten Start ggf. im Terminal ausführen:
+            `xattr -cr /Applications/SlaxxCUT.app`
+            **Windows:** Setup.exe (Installer) oder Portable.exe (ohne Installation).
+            **Linux:** AppImage ausführbar machen (`chmod +x`) und starten.
