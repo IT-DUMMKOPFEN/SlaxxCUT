@@ -43,6 +43,14 @@ jobs:
           CSC_IDENTITY_AUTO_DISCOVERY: false
         run: npx electron-builder --mac dir --arm64 --publish never
 
+      - name: Smoke test (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          xattr -cr dist/mac-arm64/SlaxxCUT.app || true
+          FF=$(find dist/mac-arm64/SlaxxCUT.app -path "*app.asar.unpacked*" -name ffmpeg -type f | head -1); codesign --force --sign - "$FF"; codesign --force --deep --sign - dist/mac-arm64/SlaxxCUT.app
+          SLAXX_SMOKE="$PWD/smoke.json" dist/mac-arm64/SlaxxCUT.app/Contents/MacOS/SlaxxCUT || true
+          cat smoke.json; node -e "process.exit(require('./smoke.json').ok?0:1)"
+
       - name: Ad-hoc sign + DMG/ZIP (macOS)
         if: runner.os == 'macOS'
         run: |
@@ -64,6 +72,13 @@ jobs:
         if: runner.os == 'Windows'
         run: npx electron-builder --win nsis portable --x64 --publish never
 
+      - name: Smoke test (Windows)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          SLAXX_SMOKE="$PWD/smoke.json" ./dist/win-unpacked/SlaxxCUT.exe || true
+          cat smoke.json; node -e "process.exit(require('./smoke.json').ok?0:1)"
+
       - name: Collect Windows files
         if: runner.os == 'Windows'
         shell: bash
@@ -73,6 +88,13 @@ jobs:
       - name: Build Linux AppImage
         if: runner.os == 'Linux'
         run: npx electron-builder --linux AppImage --x64 --publish never
+
+      - name: Smoke test (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq xvfb > /dev/null
+          SLAXX_SMOKE="$PWD/smoke.json" xvfb-run -a ./dist/linux-unpacked/slaxxcut --no-sandbox || true
+          cat smoke.json; node -e "process.exit(require('./smoke.json').ok?0:1)"
 
       - name: Collect Linux files
         if: runner.os == 'Linux'

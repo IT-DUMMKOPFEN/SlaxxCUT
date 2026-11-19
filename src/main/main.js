@@ -115,6 +115,7 @@ function createWindow() {
     }
   });
   win.once('ready-to-show', () => { win.maximize(); win.show(); });
+  if (process.env.SLAXX_SMOKE) win.webContents.once('did-finish-load', () => runSmoke(win, process.env.SLAXX_SMOKE));
   win.loadURL(`${SCHEME}://${HOST}/ui/index.html`);
   win.on('close', (e) => {
     if (forceClose) return;
@@ -241,6 +242,50 @@ function setupIpc() {
   ipcMain.handle('shell:showItem', (e, p) => { shell.showItemInFolder(p); return true; });
   ipcMain.handle('shell:openExternal', (e, url) => { if (/^https?:/.test(url)) shell.openExternal(url); return true; });
   ipcMain.handle('shell:openPath', (e, p) => shell.openPath(p));
+}
+
+/* ---------------- automated smoke test (CI only, SLAXX_SMOKE=<result.json>) ---------------- */
+async function runSmoke(w, outFile) {
+  const result = { ok: false, steps: [] };
+  const finish = () => { try { fs.writeFileSync(outFile, JSON.stringify(result, null, 2)); } catch (e) { /* */ } forceClose = true; app.exit(result.ok ? 0 : 1); };
+  setTimeout(() => { result.error = 'timeout'; finish(); }, 240000);
+  try {
+    const dir = fs.mkdtempSync(path.join(require('os').tmpdir(), 'slaxx-smoke-'));
+    const vid = path.join(dir, 'test.mp4');
+    const r = await ff.run(['-y', '-hide_banner', '-f', 'lavfi', '-i', 'testsrc2=s=640x360:r=25:d=4', '-f', 'lavfi', '-i', 'sine=f=440:d=4', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-shortest', vid]);
+    result.steps.push('ffmpeg:' + r.code + ':' + ff.ffmpegPath());
+    const out = path.join(dir, 'export.mp4');
+    const js = `(async () => {
+      const wait = (ms) => new Promise(r => setTimeout(r, ms));
+      for (let i = 0; i < 100 && !(window.SC && SC.timeline && SC.timeline.content); i++) await wait(100);
+      const errs = []; window.addEventListener('error', e => errs.push(String(e.message)));
+      const list = await SC.media.importFiles([${JSON.stringify(vid)}]);
+      const m = list[0];
+      for (let i = 0; i < 50 && SC.store.S.runtime[m.id].status !== 'ready'; i++) await wait(100);
+      SC.store.change('smoke', () => {
+        const S = SC.store.S;
+        const a = SC.edit.placeMedia(m, S.project.tracks[1].id, 0, 0, 2);
+        const b = SC.edit.placeMedia(m, S.project.tracks[1].id, 2, 2, 4);
+        SC.edit.applyEffect(a, 'vintage'); SC.edit.applyEffect(b, 'zoomIn');
+        SC.edit.applyTransition(b, 'in', 'crossfade');
+        const t = SC.edit.makeText({ start: 0.5, out: 2, trackId: S.project.tracks[0].id }); S.project.clips.push(t);
+      });
+      SC.program.seek(1.0); await wait(1500);
+      const cv = SC.programMonitor.canvas; const gl = cv.getContext('webgl2');
+      const px = new Uint8Array(4); gl.readPixels(Math.floor(cv.width / 2), Math.floor(cv.height / 2), 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px);
+      const p = SC.store.S.project; const texts = {};
+      for (const c of p.clips.filter(c => c.kind === 'text')) texts[c.id] = await SC.text.toDataURL(c, 640, 360);
+      const res = await window.api.exportStart(JSON.parse(JSON.stringify(p)), { path: ${JSON.stringify(out)}, short: 360, aspect: '16:9', fps: 25, quality: 'low', encoder: 'auto' }, texts);
+      return { pixel: Array.from(px), clips: p.clips.length, export: res, errors: errs, lang: SC.i18n.lang };
+    })()`;
+    const rr = await w.webContents.executeJavaScript(js);
+    result.renderer = rr;
+    const st = fs.statSync(out);
+    const pr = await ff.probe(out);
+    result.exportSize = st.size; result.exportDuration = pr.duration;
+    result.ok = st.size > 1000 && Math.abs(pr.duration - 4) < 0.3 && rr.pixel.some(v => v > 10) && !rr.errors.length;
+  } catch (e) { result.error = String(e && e.stack || e); }
+  finish();
 }
 
 /* ---------------- app lifecycle ---------------- */
